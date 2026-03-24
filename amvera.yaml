@@ -1,0 +1,8 @@
+---
+meta:
+  environment: python
+  toolVersion: 3.11
+
+run:
+  persistenceMount: /app/data
+  containerPort: 8080

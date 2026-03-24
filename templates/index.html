@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>СБТ — ИИ Технолог</title>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f13;
+  --surface: #17171e;
+  --surface2: #1e1e28;
+  --surface3: #252530;
+  --border: #2a2a38;
+  --accent: #ff6b35;
+  --accent2: #ff9a6c;
+  --text: #e8e8f0;
+  --text2: #9999b3;
+  --text3: #55556a;
+  --green: #3ddc97;
+  --blue: #4d9de0;
+  --radius: 12px;
+  --font: 'Geologica', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── LOGIN ── */
+#login-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: radial-gradient(ellipse at 30% 40%, #1a1020 0%, var(--bg) 60%);
+}
+
+.login-card {
+  width: 380px;
+  padding: 48px 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px; right: -1px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
+  border-radius: 20px 20px 0 0;
+}
+
+.login-logo {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.login-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.login-sub {
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 36px;
+  line-height: 1.5;
+}
+
+.login-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text2);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.login-input:focus { border-color: var(--accent); }
+
+.login-hint {
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.02em;
+}
+
+.btn-login:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-login:active { transform: translateY(0); }
+
+.login-error {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #ff5555;
+  text-align: center;
+  min-height: 20px;
+}
+
+/* ── APP SHELL ── */
+#app {
+  display: none;
+  height: 100vh;
+  flex-direction: row;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.sidebar-header {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-brand {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  font-family: var(--mono);
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--mono);
+}
+
+.btn-new {
+  margin: 14px 16px;
+  padding: 11px 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+  letter-spacing: 0.01em;
+}
+
+.btn-new:hover { background: var(--accent2); }
+
+.btn-new svg { width: 16px; height: 16px; }
+
+.sidebar-section {
+  padding: 0 16px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar-section-title {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  text-transform: uppercase;
+  padding: 12px 4px 8px;
+}
+
+.calc-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 2px;
+  transition: background 0.15s;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.calc-item:hover { background: var(--surface2); }
+.calc-item.active { background: var(--surface3); }
+
+.calc-item-title {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+  flex: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.calc-item-date {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--mono);
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.calc-delete {
+  opacity: 0;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 2px;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.calc-item:hover .calc-delete { opacity: 1; }
+.calc-delete:hover { color: #ff5555; }
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-pricelist {
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-pricelist:hover { border-color: var(--accent); color: var(--accent); }
+
+.pricelist-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text3);
+}
+
+.status-dot.ok { background: var(--green); }
+
+.btn-logout {
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  font-family: var(--font);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.btn-logout:hover { color: var(--text2); }
+
+/* ── MAIN AREA ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── WELCOME ── */
+#welcome-view {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--text3);
+}
+
+.welcome-icon {
+  font-size: 52px;
+  margin-bottom: 8px;
+}
+
+.welcome-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.welcome-sub {
+  font-size: 14px;
+  color: var(--text3);
+}
+
+/* ── CHAT VIEW ── */
+#chat-view {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  height: 100vh;
+}
+
+.chat-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+}
+
+.chat-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-export {
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.btn-export:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── MESSAGES ── */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  scroll-behavior: smooth;
+}
+
+.messages::-webkit-scrollbar { width: 6px; }
+.messages::-webkit-scrollbar-track { background: transparent; }
+.messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.msg {
+  display: flex;
+  gap: 12px;
+  max-width: 860px;
+  animation: fadeUp 0.3s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg.user { flex-direction: row-reverse; align-self: flex-end; }
+.msg.assistant { align-self: flex-start; }
+
+.msg-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.msg.user .msg-avatar {
+  background: linear-gradient(135deg, #3a3a5a, #4a4a70);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.msg.assistant .msg-avatar {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  font-size: 16px;
+}
+
+.msg-body { flex: 1; }
+
+.msg-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.msg.user .msg-name { text-align: right; }
+
+.msg-bubble {
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.msg.user .msg-bubble {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-top-right-radius: 4px;
+}
+
+.msg.assistant .msg-bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top-left-radius: 4px;
+}
+
+/* Markdown-like rendering */
+.msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+  color: var(--text);
+  margin: 16px 0 8px;
+  font-weight: 700;
+}
+.msg-bubble h1 { font-size: 16px; }
+.msg-bubble h2 { font-size: 15px; color: var(--accent); }
+.msg-bubble h3 { font-size: 14px; color: var(--text2); }
+
+.msg-bubble p { margin-bottom: 10px; }
+.msg-bubble p:last-child { margin-bottom: 0; }
+
+.msg-bubble strong { color: var(--accent2); font-weight: 600; }
+.msg-bubble em { color: var(--text2); }
+
+.msg-bubble table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.msg-bubble th {
+  background: var(--surface2);
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--text2);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.msg-bubble td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.msg-bubble tr:last-child td { border-bottom: none; }
+.msg-bubble tr:hover td { background: rgba(255,255,255,0.02); }
+
+.msg-bubble code {
+  background: var(--surface3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent2);
+}
+
+.msg-bubble pre {
+  background: var(--surface3);
+  padding: 12px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.msg-bubble pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.msg-bubble ul, .msg-bubble ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+.msg-bubble li { margin-bottom: 4px; }
+
+.msg-bubble hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+.msg-bubble blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+  color: var(--text2);
+  margin: 8px 0;
+}
+
+/* Typing indicator */
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  border-top-left-radius: 4px;
+  width: fit-content;
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--text3);
+  border-radius: 50%;
+  animation: typingBounce 1.2s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ── INPUT ── */
+.chat-input-area {
+  padding: 16px 24px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.input-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 10px 10px 16px;
+  transition: border-color 0.2s;
+}
+
+.input-wrap:focus-within { border-color: var(--accent); }
+
+.chat-textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  min-height: 24px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.chat-textarea::placeholder { color: var(--text3); }
+
+.btn-send {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border: none;
+  border-radius: 9px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.btn-send:hover { background: var(--accent2); }
+.btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.input-hint {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  width: 420px;
+  max-width: 90vw;
+}
+
+.modal h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.modal p {
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 16px;
+}
+
+.upload-zone:hover { border-color: var(--accent); background: rgba(255,107,53,0.05); }
+.upload-zone.drag-over { border-color: var(--accent); background: rgba(255,107,53,0.08); }
+
+.upload-icon { font-size: 32px; margin-bottom: 8px; }
+.upload-text { font-size: 14px; color: var(--text2); }
+.upload-hint { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+#file-input { display: none; }
+
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+.btn-cancel {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text2);
+  font-family: var(--font);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover { border-color: var(--text2); color: var(--text); }
+
+.upload-feedback {
+  font-size: 13px;
+  color: var(--green);
+  margin-bottom: 12px;
+  min-height: 20px;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── EMPTY STATE ── */
+.empty-calcs {
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--text3);
+  font-size: 13px;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">СБТ · Рекламное производство</div>
+    <div class="login-title">ИИ-Технолог</div>
+    <div class="login-sub">Система автоматического расчёта смет рекламных конструкций</div>
+    <div class="login-label">Ваш корпоративный логин</div>
+    <input class="login-input" id="login-input" type="text" placeholder="sbt01" maxlength="5" autocomplete="off" spellcheck="false">
+    <div class="login-hint">Доступны логины: sbt01 — sbt05</div>
+    <button class="btn-login" onclick="doLogin()">Войти →</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">СБТ · ИИ-Технолог</div>
+      <div class="sidebar-user">
+        <div class="user-avatar" id="user-avatar">--</div>
+        <div class="user-name" id="user-display">--</div>
+      </div>
+    </div>
+
+    <button class="btn-new" onclick="startNewCalc()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Новый расчёт
+    </button>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Расчёты</div>
+      <div id="calc-list"></div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn-pricelist" onclick="openPricelistModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        Загрузить прайс
+      </button>
+      <div class="pricelist-status">
+        <div class="status-dot" id="price-dot"></div>
+        <span id="price-status-text">Прайс не загружен</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Выйти</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Welcome -->
+    <div id="welcome-view">
+      <div class="welcome-icon">🏗️</div>
+      <div class="welcome-title">Добро пожаловать!</div>
+      <div class="welcome-sub">Выберите расчёт или начните новый</div>
+    </div>
+
+    <!-- Chat -->
+    <div id="chat-view">
+      <div class="chat-header">
+        <div class="chat-title" id="chat-title">Новый расчёт</div>
+        <div class="chat-actions">
+          <button class="btn-export" onclick="exportCalc('excel')" title="Скачать Excel">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Excel
+          </button>
+          <button class="btn-export" onclick="exportCalc('txt')" title="Скачать TXT">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            TXT
+          </button>
+        </div>
+      </div>
+
+      <div class="messages" id="messages"></div>
+
+      <div class="chat-input-area">
+        <div class="input-wrap">
+          <textarea class="chat-textarea" id="chat-input"
+            placeholder="Опишите изделие для расчёта... (Enter — отправить, Shift+Enter — перенос строки)"
+            rows="1"></textarea>
+          <button class="btn-send" id="send-btn" onclick="sendMessage()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+        <div class="input-hint">Enter — отправить · Shift+Enter — новая строка</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pricelist Modal -->
+<div class="modal-overlay" id="pricelist-modal">
+  <div class="modal">
+    <h3>📄 Загрузить прайс</h3>
+    <p>Загрузите PDF или TXT файл с актуальным прайс-листом материалов. ИИ будет использовать его при расчётах.</p>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+         ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
+      <div class="upload-icon">📤</div>
+      <div class="upload-text" id="upload-text">Нажмите или перетащите файл</div>
+      <div class="upload-hint">PDF, TXT — до 10 МБ</div>
+    </div>
+    <input type="file" id="file-input" accept=".pdf,.txt" onchange="handleFileSelect(event)">
+    <div class="upload-feedback" id="upload-feedback"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closePricelistModal()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ───────────────────────────────────────────────────────────────────
+let currentUser = null;
+let currentCalcId = null;
+let isLoading = false;
+
+// ─── Login ───────────────────────────────────────────────────────────────────
+document.getElementById('login-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+async function doLogin() {
+  const val = document.getElementById('login-input').value.trim().toLowerCase();
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({user_id: val})
+    });
+    const data = await r.json();
+    if (!r.ok) { err.textContent = data.detail || 'Ошибка входа'; return; }
+    currentUser = val;
+    showApp();
+  } catch(e) {
+    err.textContent = 'Ошибка подключения';
+  }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('user-avatar').textContent = currentUser.toUpperCase();
+  document.getElementById('user-display').textContent = currentUser;
+  loadCalcList();
+  checkPricelistStatus();
+}
+
+function logout() {
+  currentUser = null;
+  currentCalcId = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-input').value = '';
+}
+
+// ─── Calculations List ────────────────────────────────────────────────────────
+async function loadCalcList() {
+  const r = await fetch(`/api/calculations/${currentUser}`);
+  const list = await r.json();
+  const container = document.getElementById('calc-list');
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-calcs">Расчётов пока нет.<br>Нажми «Новый расчёт» ↑</div>';
+    return;
+  }
+
+  container.innerHTML = list.map(c => `
+    <div class="calc-item ${c.id === currentCalcId ? 'active' : ''}" onclick="openCalc(${c.id})" id="calc-item-${c.id}">
+      <div>
+        <div class="calc-item-title">${escHtml(c.title)}</div>
+        <div class="calc-item-date">${formatDate(c.updated_at)}</div>
+      </div>
+      <div class="calc-delete" onclick="event.stopPropagation(); deleteCalc(${c.id})" title="Удалить">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+        </svg>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function startNewCalc() {
+  const r = await fetch('/api/calculation/new', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({user_id: currentUser})
+  });
+  const data = await r.json();
+  currentCalcId = data.id;
+  await loadCalcList();
+  showChatView();
+  addWelcomeMessage();
+}
+
+async function openCalc(id) {
+  currentCalcId = id;
+  const r = await fetch(`/api/calculation/${id}`);
+  const data = await r.json();
+  showChatView();
+  document.getElementById('chat-title').textContent = data.title;
+
+  const messagesEl = document.getElementById('messages');
+  messagesEl.innerHTML = '';
+
+  if (data.messages.length === 0) {
+    addWelcomeMessage();
+  } else {
+    data.messages.forEach(m => appendMessage(m.role, m.content));
+  }
+
+  // Update active state
+  document.querySelectorAll('.calc-item').forEach(el => el.classList.remove('active'));
+  const item = document.getElementById(`calc-item-${id}`);
+  if (item) item.classList.add('active');
+
+  scrollToBottom();
+}
+
+async function deleteCalc(id) {
+  if (!confirm('Удалить этот расчёт?')) return;
+  await fetch(`/api/calculation/${id}`, {method: 'DELETE'});
+  if (currentCalcId === id) {
+    currentCalcId = null;
+    document.getElementById('chat-view').style.display = 'none';
+    document.getElementById('welcome-view').style.display = 'flex';
+  }
+  loadCalcList();
+}
+
+function addWelcomeMessage() {
+  const greetings = [
+    'Привет! Я Саша, технолог 👋\n\nЧто считаем сегодня? Описывай изделие, материалы, габариты — и поехали. Если есть эскиз с размерами — опиши его цифры в сообщении.',
+    'Привет! Саша на связи ☕\n\nНу что, давай считать. Кидай задание — материалы, размеры, что там за конструкция. Разберёмся.',
+    'Доброго дня! 👷\n\nСаша слушает. Что за изделие на этот раз? Описывай — материалы, габариты, тираж если есть.',
+  ];
+  const text = greetings[Math.floor(Math.random() * greetings.length)];
+  appendMessage('assistant', text);
+}
+
+// ─── Chat ─────────────────────────────────────────────────────────────────────
+function showChatView() {
+  document.getElementById('welcome-view').style.display = 'none';
+  document.getElementById('chat-view').style.display = 'flex';
+  document.getElementById('messages').innerHTML = '';
+}
+
+async function sendMessage() {
+  if (isLoading || !currentCalcId) return;
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  appendMessage('user', text);
+
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+
+  // Typing indicator
+  const typingId = 'typing-' + Date.now();
+  const typingEl = document.createElement('div');
+  typingEl.id = typingId;
+  typingEl.className = 'msg assistant';
+  typingEl.innerHTML = `
+    <div class="msg-avatar">🔧</div>
+    <div class="msg-body">
+      <div class="msg-name">Технолог Саша</div>
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  document.getElementById('messages').appendChild(typingEl);
+  scrollToBottom();
+
+  try {
+    const r = await fetch(`/api/chat/${currentCalcId}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: text})
+    });
+    const data = await r.json();
+
+    typingEl.remove();
+    appendMessage('assistant', data.reply);
+
+    // Update title
+    document.getElementById('chat-title').textContent = data.title;
+    loadCalcList();
+  } catch(e) {
+    typingEl.remove();
+    appendMessage('assistant', '⚠️ Ошибка сети. Попробуй ещё раз.');
+  }
+
+  isLoading = false;
+  document.getElementById('send-btn').disabled = false;
+  scrollToBottom();
+}
+
+function appendMessage(role, content) {
+  const el = document.createElement('div');
+  el.className = `msg ${role}`;
+
+  const avatar = role === 'user'
+    ? `<div class="msg-avatar">${currentUser ? currentUser.slice(-2).toUpperCase() : 'МН'}</div>`
+    : `<div class="msg-avatar">🔧</div>`;
+
+  const name = role === 'user' ? currentUser || 'Менеджер' : 'Технолог Саша';
+
+  el.innerHTML = `
+    ${avatar}
+    <div class="msg-body">
+      <div class="msg-name">${name}</div>
+      <div class="msg-bubble">${renderMarkdown(content)}</div>
+    </div>`;
+
+  document.getElementById('messages').appendChild(el);
+}
+
+function scrollToBottom() {
+  const m = document.getElementById('messages');
+  setTimeout(() => m.scrollTop = m.scrollHeight, 50);
+}
+
+// ─── Textarea auto-resize ─────────────────────────────────────────────────────
+document.getElementById('chat-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+});
+
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+function exportCalc(fmt) {
+  if (!currentCalcId) return;
+  window.open(`/api/export/${fmt}/${currentCalcId}`, '_blank');
+}
+
+// ─── Pricelist ────────────────────────────────────────────────────────────────
+function openPricelistModal() {
+  document.getElementById('pricelist-modal').classList.add('open');
+}
+function closePricelistModal() {
+  document.getElementById('pricelist-modal').classList.remove('open');
+  document.getElementById('upload-feedback').textContent = '';
+  document.getElementById('upload-text').textContent = 'Нажмите или перетащите файл';
+}
+
+async function checkPricelistStatus() {
+  const r = await fetch('/api/pricelist-status');
+  const data = await r.json();
+  const dot = document.getElementById('price-dot');
+  const txt = document.getElementById('price-status-text');
+  if (data.loaded) {
+    dot.classList.add('ok');
+    txt.textContent = `Прайс загружен (${Math.round(data.size/1024)} KB)`;
+  } else {
+    dot.classList.remove('ok');
+    txt.textContent = 'Прайс не загружен';
+  }
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('drag-over');
+}
+function handleDragLeave(e) {
+  document.getElementById('upload-zone').classList.remove('drag-over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) uploadFile(file);
+}
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) uploadFile(file);
+}
+
+async function uploadFile(file) {
+  const fb = document.getElementById('upload-feedback');
+  const ut = document.getElementById('upload-text');
+  ut.textContent = `Загружаю: ${file.name}...`;
+  fb.textContent = '';
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const r = await fetch('/api/upload-pricelist', {method: 'POST', body: formData});
+    const data = await r.json();
+    fb.textContent = `✅ Загружено успешно! ${data.chars} символов прочитано.`;
+    ut.textContent = file.name;
+    checkPricelistStatus();
+  } catch(e) {
+    fb.textContent = '❌ Ошибка загрузки. Попробуй ещё раз.';
+    ut.textContent = 'Нажмите или перетащите файл';
+  }
+}
+
+// ─── Markdown renderer (lightweight) ─────────────────────────────────────────
+function renderMarkdown(text) {
+  // Escape HTML first
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Tables
+  html = html.replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, (match, header, body) => {
+    const headers = header.split('|').map(s => s.trim()).filter(Boolean);
+    const rows = body.trim().split('\n').map(row =>
+      row.split('|').map(s => s.trim()).filter(Boolean)
+    );
+    let table = '<table><thead><tr>';
+    headers.forEach(h => table += `<th>${h}</th>`);
+    table += '</tr></thead><tbody>';
+    rows.forEach(row => {
+      table += '<tr>';
+      row.forEach(cell => table += `<td>${cell}</td>`);
+      table += '</tr>';
+    });
+    table += '</tbody></table>';
+    return table;
+  });
+
+  // Headers
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+
+  // Italic
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+  // Code blocks
+  html = html.replace(/```[\w]*\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+  // Inline code
+  html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+
+  // HR
+  html = html.replace(/^---$/gm, '<hr>');
+
+  // Blockquote
+  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+  // Lists
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+  // Line breaks → paragraphs
+  const lines = html.split('\n');
+  const result = [];
+  let inBlock = false;
+
+  for (let line of lines) {
+    if (line.match(/^<(h[123]|table|ul|pre|hr|blockquote)/)) {
+      if (inBlock) { result.push('</p>'); inBlock = false; }
+      result.push(line);
+    } else if (line.trim() === '') {
+      if (inBlock) { result.push('</p>'); inBlock = false; }
+    } else {
+      if (!inBlock) { result.push('<p>'); inBlock = true; }
+      result.push(line + ' ');
+    }
+  }
+  if (inBlock) result.push('</p>');
+
+  return result.join('\n');
+}
+
+function escHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit'}) + ' ' +
+         d.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+}
+
+// Close modal on overlay click
+document.getElementById('pricelist-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePricelistModal();
+});
+</script>
+</body>
+</html>
