@@ -6,5 +6,5 @@ meta:
     version: "20"
 
 run:
-  persistenceMount: /app/data
+  persistenceMount: /data
   containerPort: 8080
