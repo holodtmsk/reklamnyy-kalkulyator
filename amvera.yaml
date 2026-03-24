@@ -1,6 +1,6 @@
 ---
 meta:
-  environment: dockerfile
+  environment: docker
   toolchain:
     name: docker
     version: "20"
