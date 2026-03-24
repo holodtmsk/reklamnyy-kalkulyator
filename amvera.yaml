@@ -1,7 +1,9 @@
 ---
 meta:
-  environment: python
-  toolVersion: 3.11
+  environment: dockerfile
+  toolchain:
+    name: docker
+    version: "20"
 
 run:
   persistenceMount: /app/data
