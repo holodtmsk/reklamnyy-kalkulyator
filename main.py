@@ -19,9 +19,9 @@ async def index(request: Request):
 DB_PATH = "data/sbt.db"
 PRICE_LIST_PATH = "data/pricelist.txt"
 
-AMVERA_API_URL = "https://kong-proxy.yc.amvera.ru/api/v1/models/gpt"
+AMVERA_API_URL = "https://llm.amvera.ru/api/v1/chat/completions"
 AMVERA_TOKEN = os.getenv("AMVERA_TOKEN")
-MODEL = "deepseek-r1"
+MODEL = "deepseek-R1"
 
 VALID_USERS = [f"sbt0{i}" for i in range(1, 6)]
 
@@ -208,7 +208,10 @@ async def chat(calc_id: int, request: Request):
     if len(messages) == 1:
         title = user_message[:60] + ("..." if len(user_message) > 60 else "")
 
-    api_messages = [{"role": "system", "content": get_system_prompt()}] + messages
+    # Amvera использует поле "text" вместо "content"
+    api_messages = [{"role": "system", "text": get_system_prompt()}]
+    for m in messages:
+        api_messages.append({"role": m["role"], "text": m["content"]})
 
     try:
         async with httpx.AsyncClient(timeout=120.0) as client:
@@ -221,15 +224,18 @@ async def chat(calc_id: int, request: Request):
                 json={
                     "model": MODEL,
                     "messages": api_messages,
-                    "max_tokens": 4000,
+                    "max_completion_tokens": 4000,
                     "temperature": 0.3
                 }
             )
-            resp.raise_for_status()
-            data = resp.json()
-            assistant_message = data["choices"][0]["message"]["content"]
+            if resp.status_code != 200:
+                assistant_message = f"⚠️ Ошибка API {resp.status_code}: {resp.text}"
+            else:
+                data = resp.json()
+                msg = data["choices"][0]["message"]
+                assistant_message = msg.get("text") or msg.get("content") or str(msg)
     except Exception as e:
-        assistant_message = f"⚠️ Ошибка подключения к ИИ: {str(e)}\n\nПроверь токен Amvera в переменных окружения."
+        assistant_message = f"⚠️ Ошибка: {str(e)}"
 
     messages.append({"role": "assistant", "content": assistant_message})
 
