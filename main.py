@@ -134,6 +134,31 @@ def get_system_prompt():
 
 
 
+
+@app.get("/api/test-ai")
+async def test_ai():
+    import os
+    token = os.environ.get("AMVERA_TOKEN", "")
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            body = {
+                "model": "deepseek-R1",
+                "messages": [
+                    {"role": "user", "text": "Привет!"}
+                ]
+            }
+            r = await client.post(
+                "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek",
+                headers={
+                    "X-Auth-Token": f"Bearer {token}",
+                    "Content-Type": "application/json"
+                },
+                json=body
+            )
+            return {"status": r.status_code, "response": r.text[:500]}
+    except Exception as e:
+        return {"error": str(e)}
+
 # ── Routes ──────────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
