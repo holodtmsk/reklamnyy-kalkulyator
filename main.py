@@ -241,17 +241,17 @@ async def chat(calc_id: int, request: Request):
                     "X-Auth-Token": f"Bearer {AMVERA_TOKEN}",
                     "Content-Type": "application/json; charset=utf-8",
                     "Accept": "application/json",
-                    "Connection": "close"
                 },
                 content=body_bytes
             )
+            body = await resp.aread()
             if resp.status_code != 200:
-                assistant_message = f"⚠️ Ошибка API {resp.status_code}: {resp.text}"
+                assistant_message = f"⚠️ Ошибка API {resp.status_code}: {body.decode('utf-8', errors='ignore')}"
             else:
-                data = resp.json()
+                import json as json_lib2
+                data = json_lib2.loads(body.decode('utf-8'))
                 msg = data["choices"][0]["message"]
                 raw = msg.get("text") or msg.get("content") or str(msg)
-                # Убираем теги <think>...</think> из ответа DeepSeek
                 import re as re_mod
                 assistant_message = re_mod.sub(r"<think>.*?</think>", "", raw, flags=re_mod.DOTALL).strip()
     except Exception as e:
