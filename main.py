@@ -181,6 +181,24 @@ async def debug_request():
     except:
         return {"content": "No request logged yet"}
 
+
+@app.get("/api/debug-price")
+async def debug_price():
+    if os.path.exists(PRICE_LIST_PATH):
+        with open(PRICE_LIST_PATH, "r", encoding="utf-8") as f:
+            text = f.read()
+        # Find ПВХ in the text
+        lines = text.split("\n")
+        pvh_lines = [l for l in lines if "ПВХ" in l or "пвх" in l.lower()]
+        return {
+            "total_chars": len(text),
+            "total_lines": len(lines),
+            "pvh_lines_count": len(pvh_lines),
+            "pvh_sample": pvh_lines[:5],
+            "first_500": text[:500],
+        }
+    return {"error": "no pricelist"}
+
 # ── Routes ──────────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
