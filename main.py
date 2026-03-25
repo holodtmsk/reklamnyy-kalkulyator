@@ -235,16 +235,10 @@ async def chat(calc_id: int, request: Request):
     if len(messages) == 1:
         title = user_message[:60] + ("..." if len(user_message) > 60 else "")
 
-    # Amvera использует поле "text" вместо "content"
-    # Системный промпт передаём отдельно, только ASCII-безопасные символы
-    sys_prompt = get_system_prompt()
+    # Собираем сообщения без системного промпта для теста
     api_messages = []
-    # Добавляем системный промпт как первое user-сообщение если system роль не поддерживается
     for m in messages:
         api_messages.append({"role": m["role"], "text": m["content"]})
-    # Вставляем системный контекст в первое сообщение
-    if api_messages:
-        api_messages[0]["text"] = sys_prompt + "\n\n---\n\nЗапрос менеджера: " + api_messages[0]["text"]
 
     try:
         import json as json_lib
