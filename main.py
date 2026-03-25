@@ -46,11 +46,16 @@ init_db()
 def get_system_prompt():
     price_text = ""
     if os.path.exists(PRICE_LIST_PATH):
-        with open(PRICE_LIST_PATH, "r", encoding="utf-8", errors="ignore") as f:
-            raw = f.read()[:3000]
-            # Убираем символы которые ломают JSON
-            import re as _re
-            price_text = _re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', raw)
+        try:
+            with open(PRICE_LIST_PATH, "r", encoding="utf-8", errors="ignore") as f:
+                raw = f.read()[:4000]
+        except Exception:
+            raw = ""
+        import re as _re
+        # Убираем управляющие символы
+        price_text = _re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', raw)
+        # Убираем лишние кавычки которые ломают JSON
+        price_text = price_text.replace('"', "'").replace('\\', '/')
 
     prompt = f"""Ты - Саша, технолог рекламно-производственной компании СБТ. Составляешь сметы себестоимости рекламных конструкций. Общаешься на ты, по-рабочему тепло, иногда шутишь про кофе.
 
