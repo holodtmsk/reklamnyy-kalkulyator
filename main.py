@@ -225,9 +225,7 @@ async def chat(calc_id: int, request: Request):
                 },
                 json={
                     "model": MODEL,
-                    "messages": api_messages,
-                    "max_completion_tokens": 4000,
-                    "temperature": 0.3
+                    "messages": api_messages
                 }
             )
             if resp.status_code != 200:
