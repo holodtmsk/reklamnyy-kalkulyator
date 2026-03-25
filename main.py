@@ -241,17 +241,20 @@ async def chat(calc_id: int, request: Request):
         api_messages.append({"role": m["role"], "text": m["content"]})
 
     try:
+        import json as json_lib
+        body_bytes = json_lib.dumps({
+            "model": MODEL,
+            "messages": api_messages
+        }, ensure_ascii=False).encode("utf-8")
+
         async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(
                 AMVERA_API_URL,
                 headers={
                     "X-Auth-Token": f"Bearer {AMVERA_TOKEN}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json; charset=utf-8"
                 },
-                json={
-                    "model": MODEL,
-                    "messages": api_messages
-                }
+                content=body_bytes
             )
             if resp.status_code != 200:
                 assistant_message = f"⚠️ Ошибка API {resp.status_code}: {resp.text}"
