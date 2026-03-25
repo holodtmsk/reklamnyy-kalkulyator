@@ -103,9 +103,10 @@ def get_system_prompt():
 - Пленки Oracal: считать в пог.м (ширина рулона 1.26м или 1.0м), +5% припуск
 - Всегда указывай откуда взята цена: из прайса или ориентировочно
 
-РАСХОДНИКИ (всегда добавлять):
-- При оклейке пленкой: ветошь (0.5 м2/м2 оклейки, мин 0.2 м2), спирт (0.1 л/м2, мин 0.1 л), стрейч (до 1м2=3 пог.м, 1-3м2=5 пог.м, >3м2=8 пог.м)
-- При фрезеровке пластика/АКП: абразив (1 шт/7 м.п., мин 1 шт)
+РАСХОДНИКИ (добавлять ТОЛЬКО если соответствующая операция есть в заказе):
+- ТОЛЬКО при оклейке пленкой (если пленка явно указана в задании!): ветошь (0.5 м2/м2 оклейки, мин 0.2 м2), спирт (0.1 л/м2, мин 0.1 л), стрейч (до 1м2=3 пог.м, 1-3м2=5 пог.м, >3м2=8 пог.м)
+- ТОЛЬКО при фрезеровке пластика/АКП: абразив (1 шт/7 м.п., мин 1 шт)
+НЕ добавляй расходники если операция не указана в задании!
 
 ЧПУ ТАРИФЫ:
 - Фрезеровка: ПВХ 5мм/проход 50 руб, Акрил 4мм/проход 50 руб, АКП 4мм/проход 110 руб
@@ -368,19 +369,32 @@ async def upload_pricelist(file: UploadFile = File(...)):
             import pdfplumber
             with pdfplumber.open(io.BytesIO(content)) as pdf:
                 for page in pdf.pages:
-                    t = page.extract_text()
+                    t = page.extract_text(x_tolerance=3, y_tolerance=3)
                     if t:
+                        # Fix encoding if needed
+                        try:
+                            t.encode('utf-8')
+                        except Exception:
+                            t = t.encode('latin-1').decode('utf-8', errors='ignore')
                         text += t + "\n"
-        except Exception:
+        except Exception as e:
             try:
                 import PyPDF2
                 reader = PyPDF2.PdfReader(io.BytesIO(content))
                 for page in reader.pages:
-                    text += page.extract_text() + "\n"
-            except Exception as e:
+                    t = page.extract_text() or ""
+                    text += t + "\n"
+            except Exception as e2:
                 text = content.decode("utf-8", errors="ignore")
     else:
-        text = content.decode("utf-8", errors="ignore")
+        # Try UTF-8 first, then cp1251
+        try:
+            text = content.decode("utf-8")
+        except Exception:
+            try:
+                text = content.decode("cp1251")
+            except Exception:
+                text = content.decode("utf-8", errors="ignore")
 
     os.makedirs("data", exist_ok=True)
     with open(PRICE_LIST_PATH, "w", encoding="utf-8") as f:
