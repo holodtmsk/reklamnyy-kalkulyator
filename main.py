@@ -165,6 +165,15 @@ async def test_ai():
     except Exception as e:
         return {"error": str(e)}
 
+
+@app.get("/api/debug-request")
+async def debug_request():
+    try:
+        with open("/app/data/last_request.txt", "r") as f:
+            return {"content": f.read()}
+    except:
+        return {"content": "No request logged yet"}
+
 # ── Routes ──────────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
@@ -259,10 +268,17 @@ async def chat(calc_id: int, request: Request):
 
     try:
         import json as json_lib
-        body_bytes = json_lib.dumps({
+        body_dict = {
             "model": MODEL,
             "messages": api_messages
-        }, ensure_ascii=False).encode("utf-8")
+        }
+        body_str = json_lib.dumps(body_dict, ensure_ascii=False)
+        # Сохраняем последний запрос для отладки
+        with open("/app/data/last_request.txt", "w", encoding="utf-8") as dbg:
+            dbg.write(f"SIZE: {len(body_str)}\n")
+            dbg.write(f"FIRST 2000 CHARS:\n{body_str[:2000]}\n")
+            dbg.write(f"LAST 500 CHARS:\n{body_str[-500:]}")
+        body_bytes = body_str.encode("utf-8")
 
         async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(
