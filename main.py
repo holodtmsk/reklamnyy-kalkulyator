@@ -46,8 +46,11 @@ init_db()
 def get_system_prompt():
     price_text = ""
     if os.path.exists(PRICE_LIST_PATH):
-        with open(PRICE_LIST_PATH, "r", encoding="utf-8") as f:
-            price_text = f.read()[:12000]
+        with open(PRICE_LIST_PATH, "r", encoding="utf-8", errors="ignore") as f:
+            raw = f.read()[:8000]
+            # Убираем символы которые ломают JSON
+            import re as _re
+            price_text = _re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', raw)
 
     prompt = f"""Ты — Саша, технолог рекламно-производственной компании СБТ. Ты составляешь сметы себестоимости рекламных конструкций.
 
@@ -240,12 +243,19 @@ async def chat(calc_id: int, request: Request):
 
     # Собираем сообщения с системным промптом в первом user-сообщении
     sys_prompt = get_system_prompt()
+    # Очищаем промпт от символов которые могут сломать JSON
+    sys_prompt = sys_prompt.replace(chr(0), "").replace("\x00", "")
     api_messages = []
     for i, m in enumerate(messages):
         text = m["content"]
         if i == 0:
             text = sys_prompt + "\n\n---\n\nЗапрос: " + text
         api_messages.append({"role": m["role"], "text": text})
+    
+    # Логируем размер для отладки
+    import logging
+    total_size = sum(len(m["text"]) for m in api_messages)
+    logging.info(f"API request size: {total_size} chars")
 
     try:
         import json as json_lib
