@@ -49,7 +49,7 @@ def get_system_prompt():
         with open(PRICE_LIST_PATH, "r", encoding="utf-8") as f:
             price_text = f.read()[:12000]
 
-    return f"""Ты — Саша, технолог рекламно-производственной компании СБТ. Ты составляешь сметы себестоимости рекламных конструкций.
+    prompt = f"""Ты — Саша, технолог рекламно-производственной компании СБТ. Ты составляешь сметы себестоимости рекламных конструкций.
 
 Ты профессионал, но свой в доску — иногда можешь пошутить про кофе, посочувствовать сложному заказу или сказать «ну и денёк» когда расчёт сложный. Общаешься на «ты», по-рабочему тепло.
 
@@ -130,6 +130,9 @@ def get_system_prompt():
 {price_text if price_text else "⚠️ Прайс не загружен. Используй ориентировочные цены с пометкой «ориентировочно»."}
 
 Если чего-то не хватает для расчёта — спроси менеджера. Всегда уточняй способ крепления если не указан."""
+    # Очищаем от символов которые ломают JSON
+    prompt = prompt.replace("\u2014", "-").replace("\u2013", "-").replace("\u00ab", "<<").replace("\u00bb", ">>")
+    return prompt
 
 
 
@@ -235,10 +238,14 @@ async def chat(calc_id: int, request: Request):
     if len(messages) == 1:
         title = user_message[:60] + ("..." if len(user_message) > 60 else "")
 
-    # Собираем сообщения без системного промпта для теста
+    # Собираем сообщения с системным промптом в первом user-сообщении
+    sys_prompt = get_system_prompt()
     api_messages = []
-    for m in messages:
-        api_messages.append({"role": m["role"], "text": m["content"]})
+    for i, m in enumerate(messages):
+        text = m["content"]
+        if i == 0:
+            text = sys_prompt + "\n\n---\n\nЗапрос: " + text
+        api_messages.append({"role": m["role"], "text": text})
 
     try:
         import json as json_lib
@@ -261,7 +268,10 @@ async def chat(calc_id: int, request: Request):
             else:
                 data = resp.json()
                 msg = data["choices"][0]["message"]
-                assistant_message = msg.get("text") or msg.get("content") or str(msg)
+                raw = msg.get("text") or msg.get("content") or str(msg)
+                # Убираем теги <think>...</think> из ответа DeepSeek
+                import re as re_mod
+                assistant_message = re_mod.sub(r"<think>.*?</think>", "", raw, flags=re_mod.DOTALL).strip()
     except Exception as e:
         assistant_message = f"⚠️ Ошибка: {str(e)}"
 
