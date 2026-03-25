@@ -150,21 +150,26 @@ async def ping():
         except Exception as e:
             results[host] = f"FAIL: {e}"
     
-    # Test different API paths
-    paths = [
+    # Test POST to API
+    import os
+    token = os.environ.get("AMVERA_TOKEN", "")
+    test_body = {
+        "model": "deepseek-R1",
+        "messages": [{"role": "user", "text": "Hi"}]
+    }
+    for url in [
         "https://kong-proxy.yc.amvera.ru/api/v1/models/gpt",
-        "https://kong-proxy.yc.amvera.ru/v1/models/gpt", 
-        "https://kong-proxy.yc.amvera.ru/models/gpt",
         "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek",
-        "https://kong-proxy.yc.amvera.ru",
-    ]
-    for path in paths:
+    ]:
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                r = await client.get(path)
-                results[path] = f"GET {r.status_code}: {r.text[:100]}"
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                r = await client.post(url,
+                    headers={"X-Auth-Token": f"Bearer {token}", "Content-Type": "application/json"},
+                    json=test_body
+                )
+                results[f"POST {url}"] = f"{r.status_code}: {r.text[:200]}"
         except Exception as e:
-            results[path] = f"FAIL: {str(e)[:80]}"
+            results[f"POST {url}"] = f"FAIL: {str(e)[:100]}"
     
     return results
 
