@@ -231,7 +231,7 @@ async def chat(calc_id: int, request: Request):
             dbg.write(f"LAST 500 CHARS:\n{body_str[-500:]}")
         body_bytes = body_str.encode("utf-8")
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        async with httpx.AsyncClient(timeout=300.0) as client:
             resp = await client.post(
                 AMVERA_API_URL,
                 headers={
