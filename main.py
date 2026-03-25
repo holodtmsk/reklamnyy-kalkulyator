@@ -19,7 +19,7 @@ async def index(request: Request):
 DB_PATH = "data/sbt.db"
 PRICE_LIST_PATH = "data/pricelist.txt"
 
-AMVERA_API_URL = "https://llm.amvera.ru/api/v1/chat/completions"
+AMVERA_API_URL = "https://kong-proxy.yc.amvera.ru/api/v1/models/gpt"
 AMVERA_TOKEN = os.getenv("AMVERA_TOKEN")
 MODEL = "deepseek-R1"
 
@@ -131,6 +131,34 @@ def get_system_prompt():
 
 Если чего-то не хватает для расчёта — спроси менеджера. Всегда уточняй способ крепления если не указан."""
 
+
+
+@app.get("/api/ping")
+async def ping():
+    """Диагностика сети"""
+    import socket
+    results = {}
+    hosts = [
+        "kong-proxy.yc.amvera.ru",
+        "google.com",
+        "8.8.8.8"
+    ]
+    for host in hosts:
+        try:
+            ip = socket.gethostbyname(host)
+            results[host] = f"OK: {ip}"
+        except Exception as e:
+            results[host] = f"FAIL: {e}"
+    
+    # Also try HTTP request
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            r = await client.get("https://kong-proxy.yc.amvera.ru")
+            results["http_test"] = f"HTTP {r.status_code}"
+    except Exception as e:
+        results["http_test"] = f"HTTP FAIL: {e}"
+    
+    return results
 
 # ── Routes ──────────────────────────────────────────────────────────────────
 
