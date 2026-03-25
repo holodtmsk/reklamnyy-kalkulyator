@@ -917,9 +917,9 @@ body {
          ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
       <div class="upload-icon">📤</div>
       <div class="upload-text" id="upload-text">Нажмите или перетащите файл</div>
-      <div class="upload-hint">PDF, TXT — до 10 МБ</div>
+      <div class="upload-hint">PDF, TXT, CSV — до 10 МБ</div>
     </div>
-    <input type="file" id="file-input" accept=".pdf,.txt" onchange="handleFileSelect(event)">
+    <input type="file" id="file-input" accept=".pdf,.txt,.csv" onchange="handleFileSelect(event)">
     <div class="upload-feedback" id="upload-feedback"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closePricelistModal()">Закрыть</button>

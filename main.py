@@ -364,7 +364,7 @@ async def upload_pricelist(file: UploadFile = File(...)):
     content = await file.read()
     # Try to extract text from PDF using pdfplumber if available
     text = ""
-    if file.filename.endswith(".pdf"):
+    if file.filename.endswith(".pdf") and False:  # PDF disabled, use CSV/TXT
         try:
             import pdfplumber
             with pdfplumber.open(io.BytesIO(content)) as pdf:
@@ -389,7 +389,11 @@ async def upload_pricelist(file: UploadFile = File(...)):
     else:
         # Try UTF-8 first, then cp1251
         try:
-            text = content.decode("utf-8")
+            decoded = content.decode("utf-8")
+            # Check if it looks like garbled text (contains replacement chars)
+            if decoded.count('�') > 10:
+                raise UnicodeDecodeError('utf-8', b'', 0, 1, 'too many errors')
+            text = decoded
         except Exception:
             try:
                 text = content.decode("cp1251")
