@@ -19,7 +19,7 @@ async def index(request: Request):
 DB_PATH = "data/sbt.db"
 PRICE_LIST_PATH = "data/pricelist.txt"
 
-AMVERA_API_URL = "https://kong-proxy.yc.amvera.ru/api/v1/models/gpt"
+AMVERA_API_URL = "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek"
 AMVERA_TOKEN = os.getenv("AMVERA_TOKEN")
 MODEL = "deepseek-R1"
 
@@ -133,45 +133,6 @@ def get_system_prompt():
 
 
 
-@app.get("/api/ping")
-async def ping():
-    """Диагностика сети"""
-    import socket
-    results = {}
-    hosts = [
-        "kong-proxy.yc.amvera.ru",
-        "google.com",
-        "8.8.8.8"
-    ]
-    for host in hosts:
-        try:
-            ip = socket.gethostbyname(host)
-            results[host] = f"OK: {ip}"
-        except Exception as e:
-            results[host] = f"FAIL: {e}"
-    
-    # Test POST to API
-    import os
-    token = os.environ.get("AMVERA_TOKEN", "")
-    test_body = {
-        "model": "deepseek-R1",
-        "messages": [{"role": "user", "text": "Hi"}]
-    }
-    for url in [
-        "https://kong-proxy.yc.amvera.ru/api/v1/models/gpt",
-        "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek",
-    ]:
-        try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                r = await client.post(url,
-                    headers={"X-Auth-Token": f"Bearer {token}", "Content-Type": "application/json"},
-                    json=test_body
-                )
-                results[f"POST {url}"] = f"{r.status_code}: {r.text[:200]}"
-        except Exception as e:
-            results[f"POST {url}"] = f"FAIL: {str(e)[:100]}"
-    
-    return results
 
 # ── Routes ──────────────────────────────────────────────────────────────────
 
