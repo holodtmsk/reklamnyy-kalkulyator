@@ -150,13 +150,21 @@ async def ping():
         except Exception as e:
             results[host] = f"FAIL: {e}"
     
-    # Also try HTTP request
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            r = await client.get("https://kong-proxy.yc.amvera.ru")
-            results["http_test"] = f"HTTP {r.status_code}"
-    except Exception as e:
-        results["http_test"] = f"HTTP FAIL: {e}"
+    # Test different API paths
+    paths = [
+        "https://kong-proxy.yc.amvera.ru/api/v1/models/gpt",
+        "https://kong-proxy.yc.amvera.ru/v1/models/gpt", 
+        "https://kong-proxy.yc.amvera.ru/models/gpt",
+        "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek",
+        "https://kong-proxy.yc.amvera.ru",
+    ]
+    for path in paths:
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                r = await client.get(path)
+                results[path] = f"GET {r.status_code}: {r.text[:100]}"
+        except Exception as e:
+            results[path] = f"FAIL: {str(e)[:80]}"
     
     return results
 
