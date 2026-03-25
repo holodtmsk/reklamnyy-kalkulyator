@@ -5,6 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>СБТ — ИИ Технолог</title>
 <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof marked !== 'undefined') {
+      marked.setOptions({
+        breaks: true,
+        gfm: true,
+        tables: true
+      });
+    }
+  });
+</script>
 <style>
 :root {
   --bg: #0f0f13;
@@ -1218,75 +1230,11 @@ async function uploadFile(file) {
 
 // ─── Markdown renderer (lightweight) ─────────────────────────────────────────
 function renderMarkdown(text) {
-  // Escape HTML first
-  let html = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  // Tables
-  html = html.replace(/\|(.+)\|\n\|[-| :]+\|\n((?:\|.+\|\n?)*)/g, (match, header, body) => {
-    const headers = header.split('|').map(s => s.trim()).filter(Boolean);
-    const rows = body.trim().split('\n').map(row =>
-      row.split('|').map(s => s.trim()).filter(Boolean)
-    );
-    let table = '<table><thead><tr>';
-    headers.forEach(h => table += `<th>${h}</th>`);
-    table += '</tr></thead><tbody>';
-    rows.forEach(row => {
-      table += '<tr>';
-      row.forEach(cell => table += `<td>${cell}</td>`);
-      table += '</tr>';
-    });
-    table += '</tbody></table>';
-    return table;
-  });
-
-  // Headers
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-
-  // Bold
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-
-  // Italic
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-
-  // Code blocks
-  html = html.replace(/```[\w]*\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-
-  // Inline code
-  html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-
-  // HR
-  html = html.replace(/^---$/gm, '<hr>');
-
-  // Blockquote
-  html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-
-  // Lists
-  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-
-  // Line breaks → paragraphs
-  const lines = html.split('\n');
-  const result = [];
-  let inBlock = false;
-
-  for (let line of lines) {
-    if (line.match(/^<(h[123]|table|ul|pre|hr|blockquote)/)) {
-      if (inBlock) { result.push('</p>'); inBlock = false; }
-      result.push(line);
-    } else if (line.trim() === '') {
-      if (inBlock) { result.push('</p>'); inBlock = false; }
-    } else {
-      if (!inBlock) { result.push('<p>'); inBlock = true; }
-      result.push(line + ' ');
-    }
+  if (typeof marked !== 'undefined') {
+    return marked.parse(text);
   }
-  if (inBlock) result.push('</p>');
+  // Fallback if marked not loaded yet
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
 
   return result.join('\n');
 }
