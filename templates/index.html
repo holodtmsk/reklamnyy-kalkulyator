@@ -203,33 +203,66 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 .input-hint{font-size:10px;color:var(--text3);margin-top:7px;text-align:center;}
 
 /* ── PRICELIST EDITOR ── */
-#price-editor-view{display:none;flex-direction:column;flex:1;height:100vh;}
-.price-editor-header{padding:14px 20px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 14px rgba(0,0,0,0.12);border-bottom:1px solid var(--border-subtle);}
-.price-editor-title{font-size:14px;font-weight:700;color:var(--text);}
-.price-editor-actions{display:flex;gap:8px;}
-.btn-nm{padding:8px 16px;background:var(--surface-deep);border:none;border-radius:10px;color:var(--text2);font-family:'Roboto',sans-serif;font-size:12px;cursor:pointer;box-shadow:var(--nm-btn);transition:all .15s;}
+#price-editor-view{display:none;flex-direction:column;flex:1;height:100vh;overflow:hidden;}
+.pe-header{padding:13px 20px;background:var(--surface);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border-subtle);flex-shrink:0;flex-wrap:wrap;}
+.pe-title{font-size:14px;font-weight:700;color:var(--text);margin-right:auto;}
+.pe-search{width:200px;padding:7px 12px;background:var(--surface-deep);border:none;border-radius:8px;color:var(--text);font-family:"Roboto",sans-serif;font-size:12px;outline:none;box-shadow:var(--nm-in);}
+.pe-search::placeholder{color:var(--text3);}
+.btn-nm{padding:8px 14px;background:var(--surface-deep);border:none;border-radius:9px;color:var(--text2);font-family:"Roboto",sans-serif;font-size:11px;font-weight:500;cursor:pointer;box-shadow:var(--nm-btn);transition:all .15s;white-space:nowrap;}
 .btn-nm:hover{color:var(--text);box-shadow:var(--nm-out);}
 .btn-nm:active{box-shadow:var(--nm-btn-pressed);}
-.btn-nm-accent{background:linear-gradient(135deg,#c8102e,#8a0020);color:white;box-shadow:var(--nm-btn),0 0 12px rgba(200,16,46,0.15);}
-.btn-nm-accent:hover{box-shadow:var(--nm-btn),0 0 20px rgba(200,16,46,0.3);color:white;}
-.price-table-wrap{flex:1;overflow:auto;padding:16px 20px;}
-.price-table{width:100%;border-collapse:separate;border-spacing:0 4px;}
-.price-table thead th{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;padding:8px 10px;background:var(--surface);position:sticky;top:0;z-index:2;}
-.price-row{transition:all .15s;}
-.price-row td{padding:0;}
-.price-cell{width:100%;padding:8px 10px;background:var(--surface-msg-ai);border:none;border-top:1px solid var(--border-subtle);color:var(--text);font-family:'Roboto',sans-serif;font-size:12.5px;outline:none;transition:background .15s;}
-.price-cell:focus{background:var(--highlight);box-shadow:inset 0 0 0 1px rgba(200,16,46,0.3);}
-td:first-child .price-cell{border-radius:10px 0 0 10px;}
-td:last-child .price-cell{border-radius:0;}
-.price-delete-cell{width:32px;}
-.price-delete-cell .price-cell{padding:8px 6px;cursor:pointer;text-align:center;color:var(--text3);border-radius:0 10px 10px 0;}
-.price-delete-cell .price-cell:hover{color:#ff4455;background:rgba(255,68,85,0.1);}
-.price-add-row{padding:12px 20px;}
-.price-search{width:100%;padding:10px 14px;background:var(--surface-deep);border:none;border-radius:12px;color:var(--text);font-family:'Roboto',sans-serif;font-size:13px;outline:none;box-shadow:var(--nm-in);margin-bottom:12px;}
-.price-search::placeholder{color:var(--text3);}
-.price-stats{font-size:11px;color:var(--text3);padding:8px 20px;}
-
-/* ── MODAL ── */
+.btn-nm-accent{background:linear-gradient(135deg,#c8102e,#8a0020);color:white;box-shadow:var(--nm-btn),0 0 10px rgba(200,16,46,0.15);}
+.btn-nm-accent:hover{box-shadow:var(--nm-btn),0 0 18px rgba(200,16,46,0.3);color:white;}
+.pe-tabs{display:flex;gap:2px;padding:10px 20px 0;background:var(--surface);border-bottom:1px solid var(--border-subtle);flex-shrink:0;overflow-x:auto;}
+.pe-tabs::-webkit-scrollbar{height:0;}
+.pe-tab{padding:8px 16px;border-radius:8px 8px 0 0;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;border:none;background:transparent;white-space:nowrap;transition:all .15s;border-bottom:2px solid transparent;}
+.pe-tab:hover{color:var(--text);}
+.pe-tab.active{color:var(--accent);border-bottom:2px solid var(--accent);background:var(--surface-deep);}
+.pe-body{flex:1;overflow-y:auto;padding:20px 24px;}
+.pe-body::-webkit-scrollbar{width:3px;}
+.pe-body::-webkit-scrollbar-thumb{background:var(--border-subtle);border-radius:2px;}
+.pe-group-header{margin:28px 0 10px;padding-bottom:8px;border-bottom:2px solid var(--accent);display:flex;align-items:center;justify-content:space-between;}
+.pe-group-header:first-child{margin-top:0;}
+.pe-group-title{font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;}
+.pe-group-count{font-size:11px;color:var(--text3);}
+.pe-table{width:100%;border-collapse:collapse;table-layout:fixed;}
+.pe-table thead th{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);padding:7px 8px;background:var(--surface);position:sticky;top:0;z-index:2;border-bottom:1px solid var(--border-subtle);text-align:left;}
+.pe-table thead th:last-child{width:32px;}
+.pe-tr:hover td{background:var(--highlight);}
+.pe-tr td{border-bottom:1px solid var(--border-subtle);padding:0;vertical-align:middle;}
+.pe-input{width:100%;padding:9px 8px;background:transparent;border:none;color:var(--text);font-family:"Roboto",sans-serif;font-size:13px;outline:none;display:block;}
+.pe-input:focus{background:rgba(200,16,46,0.04);}
+.pe-input-num{text-align:center;color:var(--text3);font-size:12px;background:var(--surface-deep);pointer-events:none;user-select:none;}
+.pe-input-price{text-align:right;font-weight:500;font-variant-numeric:tabular-nums;}
+.pe-select-unit{width:100%;padding:9px 6px;background:transparent;border:none;color:var(--text);font-family:"Roboto",sans-serif;font-size:13px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;}
+.pe-del{display:flex;align-items:center;justify-content:center;width:32px;height:36px;color:var(--text3);cursor:pointer;border:none;background:transparent;border-radius:5px;transition:all .12s;}
+.pe-del:hover{color:#ff4455;background:rgba(255,68,85,0.1);}
+.pe-add-row{margin-top:10px;margin-bottom:4px;}
+.pe-stats{font-size:11px;color:var(--text3);padding:0 0 10px;}
+/* Password modal */
+.pe-pw-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:150;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.pe-pw-overlay.open{display:flex;}
+.pe-pw-card{background:var(--surface);border-radius:16px;padding:28px 32px;width:320px;box-shadow:var(--nm-out-lg);position:relative;}
+.pe-pw-card::before{content:'';position:absolute;top:0;left:25%;right:25%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);border-radius:0 0 2px 2px;}
+.pe-pw-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.pe-pw-sub{font-size:12px;color:var(--text2);margin-bottom:18px;}
+.pe-pw-input{width:100%;padding:12px 14px;background:var(--surface-deep);border:none;border-radius:10px;color:var(--text);font-size:15px;outline:none;box-shadow:var(--nm-in);letter-spacing:0.2em;text-align:center;margin-bottom:10px;}
+.pe-pw-input:focus{box-shadow:var(--nm-in),0 0 0 1px rgba(200,16,46,0.4);}
+.pe-pw-err{font-size:12px;color:#ff4455;text-align:center;min-height:16px;margin-bottom:8px;}
+.pe-pw-btns{display:flex;gap:8px;justify-content:flex-end;}
+@media print{
+  #app>.sidebar,#app>.main>#chat-view,#app>.main>#welcome-view,.pe-header,.pe-tabs,.no-print{display:none!important;}
+  #price-editor-view,.pe-body{display:block!important;height:auto!important;overflow:visible!important;padding:0!important;}
+  body,html{background:white!important;color:black!important;}
+  .pe-body{padding:8px!important;}
+  #print-table-wrap{display:block!important;}
+  .pe-input,.pe-select-unit{padding:3px 5px!important;font-size:11px!important;}
+  .pe-table{border-collapse:collapse!important;}
+  .pe-table td,.pe-table th{border:1px solid #aaa!important;background:white!important;color:black!important;}
+  .pe-del,.pe-add-row,.pe-group-count,.btn-nm,.pe-search{display:none!important;}
+  .pe-input-num{background:transparent!important;}
+}
+/* ── MODAL ── *//* ── MODAL ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border-radius:20px;padding:30px;width:400px;max-width:90vw;box-shadow:var(--nm-out-lg);position:relative;animation:modalIn .3s cubic-bezier(0.34,1.56,0.64,1);transition:background .35s;}
@@ -308,7 +341,7 @@ td:last-child .price-cell{border-radius:0;}
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         Загрузить прайс (CSV/Excel)
       </button>
-      <button class="btn-pricelist" onclick="openPriceEditor()" style="margin-top:4px;">
+      <button class="btn-pricelist" onclick="openPriceEditorPrompt()" style="margin-top:4px;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Редактировать прайс
       </button>
@@ -351,7 +384,7 @@ td:last-child .price-cell{border-radius:0;}
       <div class="pe-header no-print">
         <div class="pe-title">Прайс-лист</div>
         <input class="pe-search" id="pe-search" placeholder="Поиск..." oninput="peSearch(this.value)">
-        <button class="btn-nm btn-nm-print" onclick="window.print()">
+        <button class="btn-nm" onclick="pePrint()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Распечатать
         </button>
         <button class="btn-nm btn-nm-accent" onclick="peSave()">Сохранить</button>
@@ -359,7 +392,9 @@ td:last-child .price-cell{border-radius:0;}
       </div>
       <div class="pe-tabs no-print" id="pe-tabs"></div>
       <div class="pe-body" id="pe-body"></div>
-    </div>    </div>
+    </div>
+    <!-- Print frame -->
+    <div id="print-frame" style="display:none;position:fixed;inset:0;background:white;z-index:300;overflow:auto;padding:24px;"></div>    </div>
   </div>
 </div>
 
@@ -554,8 +589,30 @@ document.getElementById('chat-input').addEventListener('keydown', e => { if (e.k
 
 // ── PRICE EDITOR ──────────────────────────────────────────────────────────────
 const PE_DEFAULT = {"Листовые и рулонные": [{"num": 1, "name": "ПВХ 3 мм", "unit": "м.кв", "price": 510}, {"num": 2, "name": "ПВХ 5 мм", "unit": "м.кв", "price": 846}, {"num": 3, "name": "ПВХ 6 мм", "unit": "м.кв", "price": 960}, {"num": 4, "name": "ПВХ 8 мм", "unit": "м.кв", "price": 1350}, {"num": 5, "name": "ПВХ 10 мм", "unit": "м.кв", "price": 2388}, {"num": 6, "name": "Акрил / Оргстекло (прозрачное) 2 мм", "unit": "м.кв", "price": 1470}, {"num": 7, "name": "Акрил / Оргстекло (матовый / молочный) 3 мм", "unit": "м.кв", "price": 2100}, {"num": 8, "name": "Акрил / Оргстекло (прозрачное) 3 мм", "unit": "м.кв", "price": 1827}, {"num": 9, "name": "Акрил / Оргстекло (прозрачное) 10 мм", "unit": "м.кв", "price": 5844}, {"num": 10, "name": "АКП / Композит 3 мм (белый)", "unit": "м.кв", "price": 2157}, {"num": 11, "name": "АКП / Композит 3 мм (серебро)", "unit": "м.кв", "price": 2157}, {"num": 12, "name": "Оцинковка 0,45 мм (в рулоне)", "unit": "м.пог", "price": 986}, {"num": 13, "name": "Оцинковка 0,5 мм (в рулоне)", "unit": "м.пог", "price": 1130}, {"num": 14, "name": "Оцинковка 0,7 мм (в рулоне)", "unit": "м.пог", "price": 1274}, {"num": 15, "name": "Оцинковка 1,0 мм (лист)", "unit": "м.кв", "price": 960}, {"num": 16, "name": "Алюнатур 1,5 мм", "unit": "м.кв", "price": 7800}, {"num": 17, "name": "Алюминий 1,5 мм", "unit": "м.кв", "price": 2053}, {"num": 18, "name": "Алюминий 2 мм", "unit": "м.кв", "price": 2828}, {"num": 19, "name": "Алюминий 3 мм", "unit": "м.кв", "price": 5502}, {"num": 20, "name": "Нержавейка 1,5 мм", "unit": "м.кв", "price": 3806}, {"num": 21, "name": "Лист стальной / сталь черная 3 мм", "unit": "м.кв", "price": 1324}, {"num": 22, "name": "Пленка 641 / Oracal 641 (цветная) шир. 1.26 м", "unit": "м.пог", "price": 436}, {"num": 23, "name": "Пленка 8500 / Oracal 8500 (цветная) шир. 1.26 м", "unit": "м.пог", "price": 1032}, {"num": 24, "name": "Пленка монтажная шир. 1.26 м", "unit": "м.пог", "price": 465}, {"num": 25, "name": "ПЭТ / Полистирол (прозрачный) 2 мм", "unit": "м.кв", "price": 760}, {"num": 26, "name": "ПЭТ / Полистирол (матовый / молочный) 2 мм", "unit": "м.кв", "price": 1760}, {"num": 27, "name": "ПЭТ / Полистирол (прозрачный) 3 мм", "unit": "м.кв", "price": 2176}, {"num": 28, "name": "ПЭТ / Полистирол (матовый / молочный) 3 мм", "unit": "м.кв", "price": 2400}], "Мет. сортамент": [{"num": 1, "name": "Труба профильная 15x15x1,5", "unit": "м.пог", "price": 58}, {"num": 2, "name": "Труба профильная 20x20x1,5", "unit": "м.пог", "price": 69}, {"num": 3, "name": "Труба профильная 25x25x1,5", "unit": "м.пог", "price": 85}, {"num": 4, "name": "Труба профильная 25x25x2,0", "unit": "м.пог", "price": 97}, {"num": 5, "name": "Труба профильная 40x20x1,5", "unit": "м.пог", "price": 102}, {"num": 6, "name": "Труба профильная 40x20x2,0", "unit": "м.пог", "price": 112}, {"num": 7, "name": "Труба профильная 40x40x1,5", "unit": "м.пог", "price": 157}, {"num": 8, "name": "Труба профильная 40x40x2,0", "unit": "м.пог", "price": 198}], "Вспомогательные": [{"num": 1, "name": "Герметик", "unit": "шт.", "price": 706}, {"num": 2, "name": "Грунт / грунтовка", "unit": "кг.", "price": 300}, {"num": 3, "name": "Клей", "unit": "шт.", "price": 420}, {"num": 4, "name": "Краска", "unit": "л.", "price": 1200}, {"num": 5, "name": "Растворитель", "unit": "л.", "price": 350}, {"num": 6, "name": "Обезжириватель / спирт", "unit": "л.", "price": 300}, {"num": 7, "name": "Скотч 3М двусторонний листовой", "unit": "м.кв", "price": 1500}, {"num": 8, "name": "Скотч 3М двусторонний узкий 5 мм", "unit": "м.пог", "price": 14}, {"num": 9, "name": "Скотч-брайт", "unit": "шт.", "price": 114}, {"num": 10, "name": "Метизы / саморезы", "unit": "шт.", "price": 3}, {"num": 11, "name": "Круг отрезной", "unit": "шт.", "price": 100}, {"num": 12, "name": "Круг зачистной", "unit": "шт.", "price": 100}, {"num": 13, "name": "Абразив", "unit": "шт.", "price": 100}, {"num": 14, "name": "Стрейч-пленка", "unit": "м.пог", "price": 2}], "Операции ЧПУ": [{"num": 1, "name": "Фрезеровка ПВХ", "unit": "м.пог", "price": 40}, {"num": 2, "name": "Лазерная резка Акрил", "unit": "м.пог", "price": 40}, {"num": 3, "name": "Фрезеровка АКП (Композит)", "unit": "м.пог", "price": 110}, {"num": 4, "name": "Лазерная резка Оцинкованный металл", "unit": "м.пог", "price": 60}, {"num": 5, "name": "Лазерная резка Алюминий", "unit": "м.пог", "price": 60}, {"num": 6, "name": "Лазерная резка Нержавейка", "unit": "м.пог", "price": 60}, {"num": 7, "name": "Лазерная резка Алюнатур", "unit": "м.пог", "price": 60}, {"num": 8, "name": "Полимерное покрытие", "unit": "м.кв", "price": 550}, {"num": 9, "name": "Пробивка оцинковки", "unit": "час", "price": 850}, {"num": 10, "name": "Плазменная резка стали", "unit": "м.пог", "price": 80}], "Печать": [{"num": 1, "name": "УФ печать на ПВХ (без белого)", "unit": "м.кв", "price": 1125}, {"num": 2, "name": "УФ печать на Акрил (без белого)", "unit": "м.кв", "price": 1625}, {"num": 3, "name": "УФ печать на Композит АКП (без белого)", "unit": "м.кв", "price": 1400}, {"num": 4, "name": "УФ печать на Оцинкованный металл (без белого)", "unit": "м.кв", "price": 1400}, {"num": 5, "name": "УФ печать на Алюминий (без белого)", "unit": "м.кв", "price": 1400}, {"num": 6, "name": "УФ печать на Нержавейка (без белого)", "unit": "м.кв", "price": 1400}, {"num": 7, "name": "УФ печать на Алюнатур (без белого)", "unit": "м.кв", "price": 1400}, {"num": 8, "name": "УФ печать на ПВХ (с белым)", "unit": "м.кв", "price": 2000}, {"num": 9, "name": "УФ печать на Акрил (с белым)", "unit": "м.кв", "price": 3000}, {"num": 10, "name": "УФ печать на Композит АКП (с белым)", "unit": "м.кв", "price": 2800}, {"num": 11, "name": "УФ печать на Оцинкованный металл (с белым)", "unit": "м.кв", "price": 2800}, {"num": 12, "name": "УФ печать на Алюминий (с белым)", "unit": "м.кв", "price": 2800}, {"num": 13, "name": "УФ печать на Нержавейка (с белым)", "unit": "м.кв", "price": 2800}, {"num": 14, "name": "УФ печать на Алюнатур (с белым)", "unit": "м.кв", "price": 2800}, {"num": 15, "name": "Сольвентная печать 720 dpi (с пленкой)", "unit": "м.кв", "price": 725}, {"num": 16, "name": "Сольвентная печать 1440 dpi (с пленкой)", "unit": "м.кв", "price": 1000}, {"num": 17, "name": "Ламинация", "unit": "м.кв", "price": 375}]};
+const PE_UNITS = ["\u043c.\u043a\u0432", "\u043c.\u043f\u043e\u0433", "\u0448\u0442.", "\u043a\u0433.", "\u043b.", "\u0447\u0430\u0441"];
 let peData = {};
 let peActiveTab = '';
+
+function openPriceEditorPrompt() {
+  document.getElementById('pe-pw-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('pe-pw-input').focus(), 50);
+}
+function closePwModal() {
+  document.getElementById('pe-pw-overlay').classList.remove('open');
+  document.getElementById('pe-pw-input').value = '';
+  document.getElementById('pe-pw-err').textContent = '';
+}
+function peCheckPw() {
+  const pw = document.getElementById('pe-pw-input').value;
+  if (pw === '123') {
+    closePwModal();
+    openPriceEditor();
+  } else {
+    document.getElementById('pe-pw-err').textContent = 'Неверный пароль';
+    document.getElementById('pe-pw-input').value = '';
+    document.getElementById('pe-pw-input').focus();
+  }
+}
 
 async function openPriceEditor() {
   showView('price');
@@ -582,7 +639,7 @@ function closePriceEditor() {
 function peRenderTabs() {
   const tabs = document.getElementById('pe-tabs');
   tabs.innerHTML = Object.keys(peData).map(g =>
-    '<button class="pe-tab ' + (g===peActiveTab?'active':'') + '" onclick="peSetTab(\'' + escHtml(g) + '\')">' + escHtml(g) + '</button>'
+    '<button class="pe-tab ' + (g===peActiveTab?'active':'') + '" onclick="peSetTab(\'' + escHtml(g) + '\')">' + escHtml(g) + ' <span style="opacity:.5;font-weight:400;font-size:10px">(' + (peData[g]||[]).length + ')</span></button>'
   ).join('');
 }
 
@@ -593,6 +650,12 @@ function peSetTab(group) {
   document.getElementById('pe-search').value = '';
 }
 
+function peUnitSelect(val) {
+  return '<select class="pe-select-unit" onchange="peUpdate(this)" data-field="unit">' +
+    PE_UNITS.map(u => '<option value="' + u + '"' + (u===val?' selected':'') + '>' + u + '</option>').join('') +
+    '</select>';
+}
+
 function peRenderBody(group, filter) {
   const body = document.getElementById('pe-body');
   const rows = peData[group] || [];
@@ -601,24 +664,25 @@ function peRenderBody(group, filter) {
 
   const trs = filtered.map((r) => {
     const ri = rows.indexOf(r);
-    const g = escHtml(group);
+    const g = escAttr(group);
     return '<tr class="pe-tr" data-group="' + g + '" data-idx="' + ri + '">' +
-      '<td><input class="pe-input pe-input-num" value="' + r.num + '" data-field="num" onchange="peUpdate(this)"></td>' +
-      '<td><input class="pe-input" value="' + escAttr(r.name) + '" data-field="name" onchange="peUpdate(this)"></td>' +
-      '<td><input class="pe-input" value="' + escAttr(r.unit) + '" data-field="unit" style="width:80px" onchange="peUpdate(this)"></td>' +
-      '<td><input class="pe-input pe-input-price" value="' + r.price + '" data-field="price" onchange="peUpdate(this)"></td>' +
-      '<td><button class="pe-del" onclick="peDel(this)" title="Удалить">×</button></td>' +
+      '<td style="width:44px"><div class="pe-input pe-input-num">' + r.num + '</div></td>' +
+      '<td><input class="pe-input" value="' + escAttr(r.name) + '" data-field="name" onchange="peUpdate(this)" placeholder="Название..."></td>' +
+      '<td style="width:90px">' + peUnitSelect(r.unit) + '</td>' +
+      '<td style="width:100px"><input class="pe-input pe-input-price" value="' + r.price + '" data-field="price" oninput="this.value=this.value.replace(/[^0-9.]/g,\'\').replace(/(\\..*)\\./,\'$1\')" onchange="peUpdate(this)"></td>' +
+      '<td style="width:32px" class="no-print"><button class="pe-del" onclick="peDel(this)">×</button></td>' +
       '</tr>';
   }).join('');
 
   body.innerHTML = '<div class="pe-stats no-print">' + filtered.length + ' позиций' + (q?' (поиск)':'') + '</div>' +
-    '<table class="pe-table">' +
+    '<table class="pe-table" style="table-layout:fixed">' +
+    '<colgroup><col style="width:44px"><col><col style="width:90px"><col style="width:100px"><col style="width:32px" class="no-print"></colgroup>' +
     '<thead><tr>' +
-    '<th style="width:52px">№</th>' +
+    '<th>№</th>' +
     '<th>Наименование</th>' +
-    '<th style="width:80px">Ед.изм.</th>' +
-    '<th style="width:110px">Цена, руб.</th>' +
-    '<th style="width:36px" class="no-print"></th>' +
+    '<th>Ед.</th>' +
+    '<th style="text-align:right">Цена, руб.</th>' +
+    '<th class="no-print"></th>' +
     '</tr></thead>' +
     '<tbody>' + trs + '</tbody>' +
     '</table>' +
@@ -630,8 +694,8 @@ function peUpdate(input) {
   const group = tr.dataset.group;
   const idx = parseInt(tr.dataset.idx);
   const field = input.dataset.field;
-  let val = input.value.trim();
-  if (field === 'price' || field === 'num') val = parseFloat(val) || 0;
+  let val = input.tagName === 'SELECT' ? input.value : input.value.trim();
+  if (field === 'price') val = parseFloat(val) || 0;
   if (peData[group] && peData[group][idx] !== undefined) peData[group][idx][field] = val;
 }
 
@@ -649,8 +713,8 @@ function peAdd(group) {
   const rows = peData[group];
   rows.push({num: rows.length + 1, name: '', unit: 'м.кв', price: 0});
   peRenderBody(group);
-  const inputs = document.querySelectorAll('#pe-body .pe-input:not(.pe-input-num):not(.pe-input-price)');
-  if (inputs.length) inputs[inputs.length-1].focus();
+  const inputs = document.querySelectorAll('#pe-body tbody tr:last-child .pe-input:not(.pe-input-num)');
+  if (inputs.length) inputs[0].focus();
 }
 
 function peSearch(q) {
@@ -658,6 +722,18 @@ function peSearch(q) {
 }
 
 async function peSave() {
+  // Sync DOM changes before saving
+  document.querySelectorAll('#pe-body .pe-tr').forEach(tr => {
+    const group = tr.dataset.group;
+    const idx = parseInt(tr.dataset.idx);
+    if (!peData[group] || peData[group][idx] === undefined) return;
+    tr.querySelectorAll('[data-field]').forEach(inp => {
+      const field = inp.dataset.field;
+      let val = inp.tagName === 'SELECT' ? inp.value : inp.value.trim();
+      if (field === 'price') val = parseFloat(val) || 0;
+      peData[group][idx][field] = val;
+    });
+  });
   const content = JSON.stringify(peData, null, 2);
   try {
     const r = await fetch('/api/pricelist-save', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content})});
@@ -671,7 +747,49 @@ async function peSave() {
   } catch(e) { alert('Ошибка: ' + e.message); }
 }
 
-// ── EXCEL ─────────────────────────────────────────────────────────────────────// ── EXCEL ─────────────────────────────────────────────────────────────────────
+function pePrint() {
+  // Build a clean print-friendly single table with all groups
+  const today = new Date().toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'numeric'});
+  let globalNum = 1;
+  let rows = '';
+  for (const [group, items] of Object.entries(peData)) {
+    rows += '<tr><td colspan="5" style="background:#f0f0f0;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:8px 10px;color:#333;border-top:2px solid #999;">' + group + '</td></tr>';
+    for (const item of items) {
+      rows += '<tr>' +
+        '<td style="text-align:center;color:#777;width:44px">' + globalNum++ + '</td>' +
+        '<td>' + escHtml(item.name) + '</td>' +
+        '<td style="text-align:center;width:80px">' + escHtml(item.unit) + '</td>' +
+        '<td style="text-align:right;font-weight:600;width:100px">' + item.price.toLocaleString('ru-RU') + ' руб.</td>' +
+        '<td style="text-align:center;width:100px;color:#aaa;font-size:11px">___________</td>' +
+        '</tr>';
+    }
+  }
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<title>Прайс-лист ПРОДВИЖЕНИЕ</title>' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:20px;}' +
+    'h1{font-size:16px;font-weight:700;margin-bottom:4px;}' +
+    '.sub{font-size:11px;color:#666;margin-bottom:16px;}' +
+    'table{width:100%;border-collapse:collapse;}' +
+    'th{background:#1a1a1a;color:white;padding:7px 10px;text-align:left;font-size:10px;letter-spacing:.08em;text-transform:uppercase;}' +
+    'th:first-child{text-align:center;width:44px;}th:nth-child(3){text-align:center;width:80px;}th:nth-child(4){text-align:right;width:100px;}th:nth-child(5){text-align:center;width:100px;}' +
+    'td{padding:6px 10px;border-bottom:1px solid #e0e0e0;}' +
+    'tr:hover td{background:#fafafa;}' +
+    '@media print{body{padding:10px;}@page{margin:15mm;}}' +
+    '</style></head><body>' +
+    '<h1>ПРОДВИЖЕНИЕ — Прайс-лист на материалы и услуги</h1>' +
+    '<div class="sub">Дата: ' + today + ' &nbsp;|&nbsp; Для корректировок обратитесь к технологу</div>' +
+    '<table><thead><tr><th>№</th><th>Наименование</th><th>Ед.изм.</th><th>Цена</th><th>Новая цена</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>' +
+    '<script>window.onload=function(){window.print();}<\/script>' +
+    '</body></html>';
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
+// ── EXCEL ─────────────────────────────────────────────────────────────────────// ── EXCEL ─────────────────────────────────────────────────────────────────────// ── EXCEL ─────────────────────────────────────────────────────────────────────
 function exportToExcel(btn, encoded) {
   try {
     const content = decodeURIComponent(encoded);
@@ -778,5 +896,20 @@ function escAttr(t) { return t.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function formatDate(iso) { if(!iso)return''; const d=new Date(iso); return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); }
 document.getElementById('pricelist-modal').addEventListener('click', function(e){if(e.target===this)closePricelistModal();});
 </script>
+<!-- Price editor password -->
+<div class="pe-pw-overlay" id="pe-pw-overlay">
+  <div class="pe-pw-card">
+    <div class="pe-pw-title">Редактор прайса</div>
+    <div class="pe-pw-sub">Введите пароль для доступа</div>
+    <input class="pe-pw-input" id="pe-pw-input" type="password" placeholder="••••" maxlength="10"
+           onkeydown="if(event.key==='Enter')peCheckPw()">
+    <div class="pe-pw-err" id="pe-pw-err"></div>
+    <div class="pe-pw-btns">
+      <button class="btn-nm" onclick="closePwModal()">Отмена</button>
+      <button class="btn-nm btn-nm-accent" onclick="peCheckPw()">Войти</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
