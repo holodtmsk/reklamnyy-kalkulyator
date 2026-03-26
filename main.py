@@ -337,7 +337,13 @@ async def chat(calc_id: int, request: Request):
                 msg = data["choices"][0]["message"]
                 raw = msg.get("text") or msg.get("content") or str(msg)
                 import re as re_mod
+                # Убираем <think> теги
                 assistant_message = re_mod.sub(r"<think>.*?</think>", "", raw, flags=re_mod.DOTALL).strip()
+                # Убираем тройные кавычки если модель обернула ответ в код
+                assistant_message = re_mod.sub(r"^```[a-z]*
+?", "", assistant_message).strip()
+                assistant_message = re_mod.sub(r"
+?```$", "", assistant_message).strip()
       except Exception as e:
         if _attempt == 0:
             import asyncio
