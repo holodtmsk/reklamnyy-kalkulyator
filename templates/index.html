@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,516 +8,317 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root {
+/* ══════════════════════════════════════════════════════
+   DARK THEME
+══════════════════════════════════════════════════════ */
+[data-theme="dark"] {
   --bg: #141518;
   --bg2: #0f1012;
-  --surface: #1a1c20;
-  --surface-raised: #1e2024;
-  --surface-deep: #121416;
+  --surface: #1e2126;
+  --surface-deep: #131518;
+  --surface-msg-user: #252930;
+  --surface-msg-ai: #1c2028;
   --accent: #c8102e;
   --accent2: #ff2d50;
   --accent-glow: rgba(200,16,46,0.35);
-  --text: #dde0e8;
+  --text: #e2e5ed;
   --text2: #7a7d8a;
   --text3: #3e4050;
   --green: #2ecc8a;
-  --font: 'Roboto', sans-serif;
-  --font-cond: 'Roboto Condensed', sans-serif;
+  --nm-out: 5px 5px 12px #090a0c, -3px -3px 9px #262930;
+  --nm-out-lg: 8px 8px 22px #080a0c, -6px -6px 16px #282c34;
+  --nm-in: inset 3px 3px 9px #090a0c, inset -2px -2px 7px #252830;
+  --nm-btn: 5px 5px 13px #090a0c, -4px -4px 10px #272b32;
+  --nm-btn-pressed: inset 3px 3px 8px #080a0c, inset -2px -2px 5px #23262e;
+  --border-subtle: rgba(255,255,255,0.05);
+  --highlight: rgba(255,255,255,0.06);
+}
 
-  /* Neumorphic shadows */
-  --nm-out: 4px 4px 10px #0a0b0d, -3px -3px 8px #22252b;
-  --nm-out-lg: 8px 8px 20px #080a0c, -6px -6px 14px #252830;
-  --nm-in: inset 3px 3px 8px #0a0b0d, inset -2px -2px 6px #22252b;
-  --nm-in-accent: inset 3px 3px 8px #8a0020, inset -2px -2px 6px #ff4060;
-  --nm-btn: 5px 5px 12px #0a0b0d, -4px -4px 10px #24272e;
-  --nm-btn-pressed: inset 3px 3px 8px #080a0c, inset -2px -2px 5px #22252a;
+/* ══════════════════════════════════════════════════════
+   LIGHT THEME
+══════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg: #e8eaee;
+  --bg2: #dfe1e6;
+  --surface: #eceef2;
+  --surface-deep: #e0e2e7;
+  --surface-msg-user: #f5f6f8;
+  --surface-msg-ai: #ffffff;
+  --accent: #c8102e;
+  --accent2: #e82040;
+  --accent-glow: rgba(200,16,46,0.25);
+  --text: #1a1c24;
+  --text2: #606472;
+  --text3: #a0a4b0;
+  --green: #1aaa6a;
+  --nm-out: 5px 5px 12px #c8cacf, -4px -4px 10px #ffffff;
+  --nm-out-lg: 9px 9px 22px #c0c2c8, -7px -7px 18px #ffffff;
+  --nm-in: inset 4px 4px 10px #c8cacf, inset -3px -3px 8px #ffffff;
+  --nm-btn: 5px 5px 12px #c4c6cc, -4px -4px 10px #ffffff;
+  --nm-btn-pressed: inset 3px 3px 8px #c0c2c8, inset -2px -2px 6px #ffffff;
+  --border-subtle: rgba(0,0,0,0.06);
+  --highlight: rgba(255,255,255,0.7);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: var(--font);
+  font-family: 'Roboto', sans-serif;
   background: var(--bg);
   color: var(--text);
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  height: 100vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: background 0.35s ease, color 0.35s ease;
 }
 
-/* ─── LOGIN ─────────────────────────────────────────────────────────────── */
+/* ── THEME TOGGLE ──────────────────────────────────────────────────────── */
+.theme-toggle-wrap {
+  position: fixed; top: 14px; right: 18px; z-index: 200;
+  display: none; align-items: center; gap: 8px;
+}
+#app.visible ~ .theme-toggle-wrap,
+#app[style*="flex"] ~ .theme-toggle-wrap { display: flex; }
+
+.theme-toggle-label { font-size: 10px; letter-spacing: 0.1em; color: var(--text2); text-transform: uppercase; }
+
+.toggle-track {
+  width: 46px; height: 24px;
+  background: var(--surface-deep);
+  border-radius: 12px;
+  box-shadow: var(--nm-in);
+  position: relative; cursor: pointer;
+  transition: all 0.3s;
+}
+.toggle-track::after {
+  content: '';
+  position: absolute; top: 3px; left: 3px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--text2), var(--text3));
+  box-shadow: var(--nm-btn);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s;
+}
+[data-theme="light"] .toggle-track::after {
+  transform: translateX(22px);
+  background: linear-gradient(135deg, #ffcc00, #ff8800);
+  box-shadow: 3px 3px 8px #c0c2c8, -2px -2px 6px #ffffff, 0 0 10px rgba(255,160,0,0.4);
+}
+.toggle-icon { font-size: 14px; line-height: 1; }
+
+/* ── LOGIN ───────────────────────────────────────────────────────────────── */
 #login-screen {
   display: flex; align-items: center; justify-content: center; height: 100vh;
-  background: radial-gradient(ellipse at 40% 50%, #1a1c22 0%, #0f1012 70%);
 }
-
 .login-card {
   width: 380px; padding: 44px 40px;
-  background: var(--surface);
-  border-radius: 24px;
-  box-shadow: var(--nm-out-lg);
-  position: relative;
-  overflow: hidden;
+  background: var(--surface); border-radius: 24px;
+  box-shadow: var(--nm-out-lg); position: relative; overflow: hidden;
+  transition: background 0.35s, box-shadow 0.35s;
 }
-
 .login-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--highlight), transparent);
 }
-
-.login-logo-wrap { text-align: center; margin-bottom: 30px; position: relative; }
-
 .login-logo-main {
-  font-family: var(--font-cond);
+  font-family: 'Roboto Condensed', sans-serif;
   font-size: 30px; font-weight: 900; font-style: italic;
-  color: var(--text); letter-spacing: -0.5px;
+  color: var(--text); text-align: center; letter-spacing: -0.5px;
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  margin-bottom: 4px;
 }
-
-.login-logo-main .accent-bar {
+.accent-bar {
   display: inline-block; width: 4px; height: 26px;
   background: linear-gradient(180deg, #ff2d50, #8a0020);
-  margin: 0 2px; vertical-align: middle;
-  box-shadow: 0 0 12px var(--accent-glow);
-  border-radius: 2px;
+  border-radius: 2px; margin: 0 1px;
+  box-shadow: 0 0 10px var(--accent-glow);
 }
-.login-logo-sub {
-  font-size: 10px; letter-spacing: 0.22em; color: var(--text3);
-  text-transform: uppercase; margin-top: 4px;
-}
-
-.login-nm-divider {
-  height: 2px; margin: 0 0 26px;
-  background: var(--surface-deep);
-  border-radius: 1px;
-  box-shadow: var(--nm-in);
-}
-
-.login-subtitle {
-  font-size: 11px; font-weight: 500; letter-spacing: 0.14em;
-  color: var(--text2); text-transform: uppercase; text-align: center; margin-bottom: 22px;
-}
-
-.login-label {
-  font-size: 10px; font-weight: 500; letter-spacing: 0.12em;
-  color: var(--text2); text-transform: uppercase; margin-bottom: 8px;
-}
-
-.login-input-wrap {
-  background: var(--surface-deep);
-  border-radius: 14px;
-  box-shadow: var(--nm-in);
-  padding: 2px; margin-bottom: 10px;
-  transition: box-shadow 0.2s;
-}
-.login-input-wrap:focus-within {
-  box-shadow: inset 3px 3px 8px #080a0c, inset -2px -2px 5px #22252a, 0 0 0 1px rgba(200,16,46,0.4);
-}
-.login-input {
-  width: 100%; padding: 13px 16px;
-  background: transparent; border: none;
-  color: var(--text); font-size: 17px; letter-spacing: 0.14em;
-  outline: none; text-align: center; border-radius: 12px;
-}
+.login-logo-sub { font-size: 10px; letter-spacing: 0.22em; color: var(--text3); text-transform: uppercase; text-align: center; margin-bottom: 28px; }
+.login-nm-divider { height: 2px; margin: 0 0 24px; background: var(--surface-deep); border-radius: 1px; box-shadow: var(--nm-in); }
+.login-subtitle { font-size: 11px; font-weight: 500; letter-spacing: 0.14em; color: var(--text2); text-transform: uppercase; text-align: center; margin-bottom: 20px; }
+.login-label { font-size: 10px; font-weight: 500; letter-spacing: 0.12em; color: var(--text2); text-transform: uppercase; margin-bottom: 8px; }
+.login-input-wrap { background: var(--surface-deep); border-radius: 14px; box-shadow: var(--nm-in); padding: 2px; margin-bottom: 10px; transition: box-shadow 0.2s; }
+.login-input-wrap:focus-within { box-shadow: var(--nm-in), 0 0 0 1px rgba(200,16,46,0.4); }
+.login-input { width: 100%; padding: 13px 16px; background: transparent; border: none; color: var(--text); font-size: 17px; letter-spacing: 0.14em; outline: none; text-align: center; border-radius: 12px; }
 .login-input::placeholder { color: var(--text3); }
-
 .login-hint { font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 22px; }
-
 .btn-login {
   width: 100%; padding: 14px;
   background: linear-gradient(135deg, #d41030 0%, #9a0020 100%);
   color: white; border: none; border-radius: 14px;
-  font-family: var(--font-cond); font-size: 13px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase;
-  cursor: pointer; position: relative; overflow: hidden;
-  box-shadow: 5px 5px 14px #080a0c, -3px -3px 8px #24272e, 0 0 20px rgba(200,16,46,0.2);
+  font-family: 'Roboto Condensed', sans-serif; font-size: 13px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+  position: relative; overflow: hidden;
+  box-shadow: var(--nm-btn), 0 0 20px rgba(200,16,46,0.2);
   transition: all 0.15s;
 }
-.btn-login::before {
-  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
-  transition: left 0.4s;
-}
+.btn-login::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent); transition: left 0.4s; }
 .btn-login:hover::before { left: 100%; }
-.btn-login:hover { box-shadow: 5px 5px 14px #080a0c, -3px -3px 8px #24272e, 0 0 30px rgba(200,16,46,0.4); }
-.btn-login:active {
-  box-shadow: var(--nm-btn-pressed), 0 0 15px rgba(200,16,46,0.2);
-  transform: scale(0.99);
-}
-
+.btn-login:hover { box-shadow: var(--nm-btn), 0 0 28px rgba(200,16,46,0.4); }
+.btn-login:active { box-shadow: var(--nm-btn-pressed); transform: scale(0.99); }
 .login-error { margin-top: 12px; font-size: 12px; color: #ff4455; text-align: center; min-height: 18px; }
 
-/* ─── APP ────────────────────────────────────────────────────────────────── */
+/* ── APP ─────────────────────────────────────────────────────────────────── */
 #app { display: none; height: 100vh; flex-direction: row; }
 
-/* ─── SIDEBAR ────────────────────────────────────────────────────────────── */
+/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
 .sidebar {
   width: 268px; min-width: 268px;
   background: var(--surface);
   display: flex; flex-direction: column; height: 100vh;
-  box-shadow: 4px 0 20px rgba(0,0,0,0.4);
+  box-shadow: 4px 0 20px rgba(0,0,0,0.15);
   position: relative; z-index: 10;
+  transition: background 0.35s, box-shadow 0.35s;
 }
-
-.sidebar::after {
-  content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(255,255,255,0.04), transparent);
-}
-
-.sidebar-header {
-  padding: 18px 18px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  position: relative;
-}
-.sidebar-header::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--accent), transparent);
-}
-
-.sidebar-logo {
-  font-family: var(--font-cond); font-size: 18px; font-weight: 900;
-  font-style: italic; color: var(--text); letter-spacing: -0.3px;
-  display: flex; align-items: center; gap: 3px;
-}
-.logo-bar {
-  display: inline-block; width: 3px; height: 16px;
-  background: linear-gradient(180deg, var(--accent2), #8a0020);
-  border-radius: 1.5px; margin: 0 1px;
-  box-shadow: 0 0 8px var(--accent-glow);
-}
+.sidebar::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 1px; background: linear-gradient(180deg, transparent, var(--border-subtle), transparent); }
+.sidebar-header { padding: 18px 18px 14px; border-bottom: 1px solid var(--border-subtle); position: relative; }
+.sidebar-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), transparent); }
+.sidebar-logo { font-family: 'Roboto Condensed', sans-serif; font-size: 18px; font-weight: 900; font-style: italic; color: var(--text); display: flex; align-items: center; gap: 2px; }
+.logo-bar { display: inline-block; width: 3px; height: 16px; background: linear-gradient(180deg, var(--accent2), #8a0020); border-radius: 1.5px; margin: 0 1px; box-shadow: 0 0 8px var(--accent-glow); }
 .sidebar-logo-sub { font-size: 9px; letter-spacing: 0.2em; color: var(--text3); text-transform: uppercase; margin-bottom: 12px; }
-
 .sidebar-user { display: flex; align-items: center; gap: 10px; }
-.user-avatar {
-  width: 30px; height: 30px;
-  background: linear-gradient(135deg, #d41030, #8a0020);
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 700; color: white;
-  box-shadow: var(--nm-btn);
-}
+.user-avatar { width: 30px; height: 30px; background: linear-gradient(135deg, #d41030, #8a0020); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; box-shadow: var(--nm-btn); }
 .user-name { font-size: 13px; font-weight: 500; color: var(--text); }
-
-.btn-new {
-  margin: 14px 16px;
-  padding: 11px 16px;
-  background: linear-gradient(135deg, #c8102e, #8a0020);
-  color: white; border: none; border-radius: 12px;
-  font-family: var(--font-cond); font-size: 12px; font-weight: 700;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  cursor: pointer; display: flex; align-items: center; gap: 8px;
-  box-shadow: var(--nm-btn), 0 0 16px rgba(200,16,46,0.15);
-  transition: all 0.15s; position: relative; overflow: hidden;
-}
-.btn-new::after {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.1), transparent);
-  border-radius: 12px 12px 0 0;
-}
+.btn-new { margin: 14px 16px; padding: 11px 16px; background: linear-gradient(135deg, #c8102e, #8a0020); color: white; border: none; border-radius: 12px; font-family: 'Roboto Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: var(--nm-btn), 0 0 16px rgba(200,16,46,0.15); transition: all 0.15s; position: relative; overflow: hidden; }
+.btn-new::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.1), transparent); border-radius: 12px 12px 0 0; pointer-events: none; }
 .btn-new:hover { box-shadow: var(--nm-btn), 0 0 24px rgba(200,16,46,0.3); transform: translateY(-1px); }
 .btn-new:active { box-shadow: var(--nm-btn-pressed); transform: translateY(0) scale(0.99); }
-
 .sidebar-section { padding: 0 14px; flex: 1; overflow-y: auto; }
 .sidebar-section::-webkit-scrollbar { width: 3px; }
-.sidebar-section::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 2px; }
-
-.sidebar-section-title {
-  font-size: 10px; font-weight: 500; letter-spacing: 0.16em;
-  color: var(--text3); text-transform: uppercase; padding: 12px 4px 8px;
-}
-
-.calc-item {
-  padding: 10px 12px; border-radius: 10px; cursor: pointer;
-  margin-bottom: 4px; transition: all 0.15s;
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
-  position: relative;
-}
-.calc-item::before { content: ''; position: absolute; inset: 0; border-radius: 10px; opacity: 0; transition: opacity 0.15s; background: rgba(255,255,255,0.03); }
-.calc-item:hover::before { opacity: 1; }
-.calc-item:hover { box-shadow: var(--nm-out); }
-.calc-item.active {
-  background: var(--surface-deep);
-  box-shadow: var(--nm-in);
-  border-left: 2px solid var(--accent);
-  padding-left: 10px;
-}
-.calc-item.active::after {
-  content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
-  width: 2px; background: linear-gradient(180deg, transparent, var(--accent), transparent);
-  border-radius: 1px; box-shadow: 0 0 8px var(--accent-glow);
-}
-.calc-item-title { font-size: 12px; color: var(--text); line-height: 1.4; flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.calc-item-date { font-size: 10px; color: var(--text3); white-space: nowrap; margin-top: 2px; }
-.calc-delete { opacity: 0; color: var(--text3); cursor: pointer; padding: 3px; transition: all 0.1s; flex-shrink: 0; border-radius: 4px; }
-.calc-item:hover .calc-delete { opacity: 1; }
-.calc-delete:hover { color: #ff4455; background: rgba(255,68,85,0.1); }
-
+.sidebar-section::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+.sidebar-section-title { font-size: 10px; font-weight: 500; letter-spacing: 0.16em; color: var(--text3); text-transform: uppercase; padding: 12px 4px 8px; }
+.calc-item { padding: 10px 12px; border-radius: 10px; cursor: pointer; margin-bottom: 4px; transition: all 0.15s; display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; position: relative; }
+.calc-item:hover { box-shadow: var(--nm-out); background: var(--surface-deep); }
+.calc-item.active { background: var(--surface-deep); box-shadow: var(--nm-in); }
+.calc-item.active::before { content: ''; position: absolute; left: 0; top: 15%; bottom: 15%; width: 2px; background: linear-gradient(180deg, transparent, var(--accent), transparent); border-radius: 1px; box-shadow: 0 0 8px var(--accent-glow); }
+.calc-item-info { flex: 1; min-width: 0; }
+.calc-item-title { font-size: 12px; color: var(--text); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.calc-item-date { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.calc-delete-btn { opacity: 0; color: var(--text3); cursor: pointer; padding: 4px; transition: all 0.12s; flex-shrink: 0; border-radius: 5px; background: transparent; border: none; display: flex; align-items: center; }
+.calc-item:hover .calc-delete-btn { opacity: 1; }
+.calc-delete-btn:hover { color: #ff4455; background: rgba(255,68,85,0.12); }
 .empty-calcs { padding: 24px 6px; text-align: center; color: var(--text3); font-size: 12px; line-height: 1.7; }
-
-.sidebar-footer { padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.04); }
-
-.btn-pricelist {
-  width: 100%; padding: 10px 14px;
-  background: var(--surface-deep); border: none; border-radius: 10px;
-  color: var(--text2); font-family: var(--font); font-size: 12px;
-  cursor: pointer; display: flex; align-items: center; gap: 8px;
-  box-shadow: var(--nm-out); transition: all 0.15s;
-}
+.sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--border-subtle); }
+.btn-pricelist { width: 100%; padding: 10px 14px; background: var(--surface-deep); border: none; border-radius: 10px; color: var(--text2); font-family: 'Roboto', sans-serif; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: var(--nm-out); transition: all 0.15s; }
 .btn-pricelist:hover { color: var(--accent); box-shadow: var(--nm-out), 0 0 12px rgba(200,16,46,0.1); }
 .btn-pricelist:active { box-shadow: var(--nm-btn-pressed); }
-
 .pricelist-status { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 10px; color: var(--text3); }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); box-shadow: none; transition: all 0.3s; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); transition: all 0.3s; }
 .status-dot.ok { background: var(--green); box-shadow: 0 0 8px rgba(46,204,138,0.5); }
-
-.btn-logout {
-  margin-top: 8px; width: 100%; padding: 8px;
-  background: transparent; border: none; color: var(--text3);
-  font-family: var(--font); font-size: 11px; cursor: pointer;
-  transition: color 0.15s; letter-spacing: 0.04em;
-}
+.btn-logout { margin-top: 8px; width: 100%; padding: 8px; background: transparent; border: none; color: var(--text3); font-family: 'Roboto', sans-serif; font-size: 11px; cursor: pointer; transition: color 0.15s; }
 .btn-logout:hover { color: var(--text2); }
 
-/* ─── MAIN ───────────────────────────────────────────────────────────────── */
-.main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--bg2); }
-
-#welcome-view {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  flex-direction: column; gap: 12px;
-}
-.welcome-logo {
-  font-family: var(--font-cond); font-size: 44px; font-weight: 900;
-  font-style: italic; color: var(--text3); display: flex; align-items: center; gap: 4px;
-  text-shadow: none;
-}
-.welcome-logo .wl-bar {
-  width: 5px; height: 40px;
-  background: linear-gradient(180deg, var(--accent), #3a0010);
-  border-radius: 2.5px; opacity: 0.4;
-  box-shadow: 0 0 16px var(--accent-glow);
-}
+/* ── MAIN ────────────────────────────────────────────────────────────────── */
+.main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--bg2); transition: background 0.35s; }
+#welcome-view { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+.welcome-logo { font-family: 'Roboto Condensed', sans-serif; font-size: 44px; font-weight: 900; font-style: italic; color: var(--text3); display: flex; align-items: center; gap: 4px; }
+.welcome-logo .wl-bar { width: 5px; height: 40px; background: linear-gradient(180deg, var(--accent), #3a0010); border-radius: 2.5px; opacity: 0.4; box-shadow: 0 0 16px var(--accent-glow); }
 .welcome-sub { font-size: 13px; color: var(--text3); letter-spacing: 0.06em; }
 
-/* ─── CHAT ───────────────────────────────────────────────────────────────── */
+/* ── CHAT ────────────────────────────────────────────────────────────────── */
 #chat-view { display: none; flex-direction: column; flex: 1; height: 100vh; }
-
-.chat-header {
-  padding: 14px 22px;
-  background: var(--surface);
-  display: flex; align-items: center; justify-content: space-between;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
-  position: relative; z-index: 5;
-}
-.chat-header::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-}
+.chat-header { padding: 14px 22px; background: var(--surface); display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 16px rgba(0,0,0,0.15); position: relative; z-index: 5; transition: background 0.35s; }
+.chat-header::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--border-subtle), transparent); }
 .chat-title { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .chat-header-right { font-size: 11px; color: var(--text3); }
 
-.messages {
-  flex: 1; overflow-y: auto; padding: 24px 22px;
-  display: flex; flex-direction: column; gap: 18px;
-}
+.messages { flex: 1; overflow-y: auto; padding: 24px 22px; display: flex; flex-direction: column; gap: 18px; }
 .messages::-webkit-scrollbar { width: 3px; }
-.messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 2px; }
+.messages::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
 
 .msg { display: flex; gap: 12px; max-width: 900px; animation: fadeSlide 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-@keyframes fadeSlide {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
+@keyframes fadeSlide { from { opacity: 0; transform: translateY(10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .msg.user { flex-direction: row-reverse; align-self: flex-end; }
 .msg.assistant { align-self: flex-start; }
 
-.msg-avatar {
-  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700;
-  box-shadow: var(--nm-btn);
-}
+.msg-avatar { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; box-shadow: var(--nm-btn); }
 .msg.user .msg-avatar { background: var(--surface-deep); color: var(--text2); }
-.msg.assistant .msg-avatar {
-  background: linear-gradient(135deg, #c8102e, #7a0018);
-  color: white; font-size: 13px;
-  box-shadow: var(--nm-btn), 0 0 12px rgba(200,16,46,0.2);
-}
+.msg.assistant .msg-avatar { background: linear-gradient(135deg, #c8102e, #7a0018); color: white; font-size: 13px; box-shadow: var(--nm-btn), 0 0 12px rgba(200,16,46,0.2); }
 
 .msg-body { flex: 1; }
 .msg-name { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: var(--text3); text-transform: uppercase; margin-bottom: 6px; }
 .msg.user .msg-name { text-align: right; }
 
-.msg-bubble {
-  padding: 14px 18px; border-radius: 16px;
-  font-size: 13.5px; line-height: 1.68; color: var(--text);
-  position: relative; overflow: hidden;
-}
-.msg.user .msg-bubble {
-  background: var(--surface-deep);
-  box-shadow: var(--nm-out);
-  border-radius: 16px 4px 16px 16px;
-}
-.msg.user .msg-bubble::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
-}
-.msg.assistant .msg-bubble {
-  background: var(--surface);
-  box-shadow: var(--nm-out);
-  border-radius: 4px 16px 16px 16px;
-}
-.msg.assistant .msg-bubble::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, rgba(200,16,46,0.3), rgba(255,255,255,0.04), transparent);
-}
+/* КОНТРАСТНЫЕ баблы */
+.msg-bubble { padding: 14px 18px; border-radius: 16px; font-size: 13.5px; line-height: 1.68; color: var(--text); position: relative; overflow: hidden; transition: background 0.35s, box-shadow 0.35s; }
+.msg.user .msg-bubble { background: var(--surface-msg-user); box-shadow: var(--nm-out); border-radius: 16px 4px 16px 16px; }
+.msg.assistant .msg-bubble { background: var(--surface-msg-ai); box-shadow: var(--nm-out); border-radius: 4px 16px 16px 16px; }
+.msg.assistant .msg-bubble::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, rgba(200,16,46,0.4), var(--border-subtle), transparent); }
 
 /* Markdown */
-.msg-bubble h1,.msg-bubble h2,.msg-bubble h3{color:var(--text);margin:16px 0 7px;font-weight:700;}
-.msg-bubble h1{font-size:15px;}
-.msg-bubble h2{font-size:13px;color:var(--accent2);font-family:var(--font-cond);letter-spacing:.08em;text-transform:uppercase;text-shadow:0 0 12px rgba(200,16,46,0.3);}
-.msg-bubble h3{font-size:13px;color:var(--text2);}
-.msg-bubble p{margin-bottom:9px;} .msg-bubble p:last-child{margin-bottom:0;}
-.msg-bubble strong{color:var(--text);font-weight:700;}
-.msg-bubble em{color:var(--text2);}
-.msg-bubble table{width:100%;border-collapse:separate;border-spacing:0;margin:12px 0;font-size:12.5px;border-radius:10px;overflow:hidden;box-shadow:var(--nm-in);}
-.msg-bubble th{background:var(--surface-deep);padding:8px 11px;text-align:left;font-weight:700;font-size:10px;letter-spacing:.07em;color:var(--text2);text-transform:uppercase;}
-.msg-bubble th:first-child{border-radius:10px 0 0 0;} .msg-bubble th:last-child{border-radius:0 10px 0 0;}
-.msg-bubble td{padding:8px 11px;border-top:1px solid rgba(255,255,255,0.04);color:var(--text);}
-.msg-bubble tr:hover td{background:rgba(255,255,255,0.02);}
-.msg-bubble code{background:var(--surface-deep);padding:2px 6px;border-radius:5px;font-size:12px;color:#ff8090;box-shadow:var(--nm-in);}
-.msg-bubble pre{background:var(--surface-deep);padding:12px 16px;border-radius:10px;overflow-x:auto;margin:8px 0;box-shadow:var(--nm-in);}
-.msg-bubble hr{border:none;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);margin:16px 0;}
-.msg-bubble ul,.msg-bubble ol{padding-left:20px;margin:7px 0;}
-.msg-bubble li{margin-bottom:4px;}
-.msg-bubble blockquote{border-left:2px solid var(--accent);padding-left:12px;color:var(--text2);margin:8px 0;box-shadow:-2px 0 8px rgba(200,16,46,0.15);}
+.msg-bubble h2 { font-size: 12px; color: var(--accent2); font-family: 'Roboto Condensed', sans-serif; letter-spacing: .08em; text-transform: uppercase; margin: 14px 0 6px; font-weight: 700; }
+.msg-bubble h1,.msg-bubble h3 { color: var(--text); margin: 12px 0 6px; font-weight: 700; font-size: 14px; }
+.msg-bubble p { margin-bottom: 8px; } .msg-bubble p:last-child { margin-bottom: 0; }
+.msg-bubble strong { color: var(--text); font-weight: 700; }
+.msg-bubble em { color: var(--text2); }
+.msg-bubble table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 12px 0; font-size: 12.5px; border-radius: 10px; overflow: hidden; box-shadow: var(--nm-in); }
+.msg-bubble th { background: var(--surface-deep); padding: 8px 11px; text-align: left; font-weight: 700; font-size: 10px; letter-spacing: .07em; color: var(--text2); text-transform: uppercase; }
+.msg-bubble td { padding: 8px 11px; border-top: 1px solid var(--border-subtle); color: var(--text); }
+.msg-bubble tr:hover td { background: var(--highlight); }
+.msg-bubble code { background: var(--surface-deep); padding: 2px 6px; border-radius: 5px; font-size: 12px; color: var(--accent2); }
+.msg-bubble pre { background: var(--surface-deep); padding: 12px 16px; border-radius: 10px; overflow-x: auto; margin: 8px 0; box-shadow: var(--nm-in); }
+.msg-bubble hr { border: none; height: 1px; background: var(--border-subtle); margin: 16px 0; }
+.msg-bubble ul,.msg-bubble ol { padding-left: 20px; margin: 7px 0; } .msg-bubble li { margin-bottom: 4px; }
+.msg-bubble blockquote { border-left: 2px solid var(--accent); padding-left: 12px; color: var(--text2); margin: 8px 0; }
 
-/* Export button */
-.calc-export-btn {
-  margin-top: 14px; padding: 9px 16px;
-  background: var(--surface-deep); border: none; border-radius: 10px;
-  color: var(--accent2); font-family: var(--font-cond);
-  font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-  cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
-  box-shadow: var(--nm-btn);
-  transition: all 0.15s; position: relative; overflow: hidden;
-}
-.calc-export-btn::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent);
-  border-radius: 10px 10px 0 0;
-}
-.calc-export-btn:hover {
-  box-shadow: var(--nm-btn), 0 0 16px rgba(200,16,46,0.2);
-  color: white; transform: translateY(-1px);
-}
+.calc-export-btn { margin-top: 14px; padding: 9px 16px; background: var(--surface-deep); border: none; border-radius: 10px; color: var(--accent2); font-family: 'Roboto Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; box-shadow: var(--nm-btn); transition: all 0.15s; position: relative; overflow: hidden; }
+.calc-export-btn::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, var(--highlight), transparent); border-radius: 10px 10px 0 0; pointer-events: none; }
+.calc-export-btn:hover { box-shadow: var(--nm-btn), 0 0 16px rgba(200,16,46,0.2); color: var(--accent); transform: translateY(-1px); }
 .calc-export-btn:active { box-shadow: var(--nm-btn-pressed); transform: translateY(0); }
 
-/* Typing */
-.typing-indicator {
-  display: flex; gap: 5px; padding: 14px 18px;
-  background: var(--surface); border-radius: 4px 16px 16px 16px;
-  box-shadow: var(--nm-out); width: fit-content;
-}
-.typing-dot {
-  width: 6px; height: 6px; background: var(--text3); border-radius: 50%;
-  animation: nmPulse 1.4s ease infinite;
-}
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes nmPulse {
-  0%,80%,100% { transform: scale(0.8); opacity: 0.3; background: var(--text3); }
-  40% { transform: scale(1.2); opacity: 1; background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); }
-}
+.typing-indicator { display: flex; gap: 5px; padding: 14px 18px; background: var(--surface-msg-ai); border-radius: 4px 16px 16px 16px; box-shadow: var(--nm-out); width: fit-content; }
+.typing-dot { width: 6px; height: 6px; background: var(--text3); border-radius: 50%; animation: nmPulse 1.4s ease infinite; }
+.typing-dot:nth-child(2) { animation-delay: 0.2s; } .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes nmPulse { 0%,80%,100% { transform: scale(0.8); opacity: 0.3; background: var(--text3); } 40% { transform: scale(1.2); opacity: 1; background: var(--accent); box-shadow: 0 0 6px var(--accent-glow); } }
 
-/* Input */
-.chat-input-area {
-  padding: 16px 22px 20px;
-  background: var(--surface);
-  box-shadow: 0 -2px 20px rgba(0,0,0,0.3);
-}
-.input-nm-wrap {
-  background: var(--surface-deep);
-  border-radius: 16px;
-  box-shadow: var(--nm-in);
-  padding: 3px;
-  transition: box-shadow 0.2s;
-}
-.input-nm-wrap:focus-within {
-  box-shadow: inset 3px 3px 8px #080a0c, inset -2px -2px 5px #22252a,
-              0 0 0 1px rgba(200,16,46,0.3), 0 0 20px rgba(200,16,46,0.06);
-}
+.chat-input-area { padding: 16px 22px 20px; background: var(--surface); box-shadow: 0 -2px 20px rgba(0,0,0,0.1); transition: background 0.35s; }
+.input-nm-wrap { background: var(--surface-deep); border-radius: 16px; box-shadow: var(--nm-in); padding: 3px; transition: box-shadow 0.2s; }
+.input-nm-wrap:focus-within { box-shadow: var(--nm-in), 0 0 0 1px rgba(200,16,46,0.3), 0 0 20px rgba(200,16,46,0.06); }
 .input-inner { display: flex; gap: 8px; align-items: flex-end; padding: 8px 8px 8px 16px; }
-.chat-textarea {
-  flex: 1; background: transparent; border: none; color: var(--text);
-  font-family: var(--font); font-size: 13.5px; line-height: 1.5;
-  resize: none; outline: none; min-height: 22px; max-height: 130px; overflow-y: auto;
-}
+.chat-textarea { flex: 1; background: transparent; border: none; color: var(--text); font-family: 'Roboto', sans-serif; font-size: 13.5px; line-height: 1.5; resize: none; outline: none; min-height: 22px; max-height: 130px; overflow-y: auto; }
 .chat-textarea::placeholder { color: var(--text3); }
-
-.btn-send {
-  width: 36px; height: 36px; flex-shrink: 0;
-  background: linear-gradient(135deg, #c8102e, #8a0018);
-  border: none; border-radius: 10px; color: white; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--nm-btn), 0 0 12px rgba(200,16,46,0.2);
-  transition: all 0.15s; position: relative; overflow: hidden;
-}
-.btn-send::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
-  border-radius: 10px 10px 0 0;
-}
+.btn-send { width: 36px; height: 36px; flex-shrink: 0; background: linear-gradient(135deg, #c8102e, #8a0018); border: none; border-radius: 10px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--nm-btn), 0 0 12px rgba(200,16,46,0.2); transition: all 0.15s; position: relative; overflow: hidden; }
+.btn-send::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent); border-radius: 10px 10px 0 0; pointer-events: none; }
 .btn-send:hover { box-shadow: var(--nm-btn), 0 0 20px rgba(200,16,46,0.4); transform: scale(1.05); }
 .btn-send:active { box-shadow: var(--nm-btn-pressed); transform: scale(0.97); }
 .btn-send:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
-.input-hint { font-size: 10px; color: var(--text3); margin-top: 8px; text-align: center; letter-spacing: 0.04em; }
+.input-hint { font-size: 10px; color: var(--text3); margin-top: 8px; text-align: center; }
 
 /* Modal */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
 .modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface); border-radius: 20px; padding: 32px;
-  width: 400px; max-width: 90vw;
-  box-shadow: 12px 12px 28px #070809, -8px -8px 18px #252830;
-  position: relative; animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
+.modal { background: var(--surface); border-radius: 20px; padding: 32px; width: 400px; max-width: 90vw; box-shadow: var(--nm-out-lg); position: relative; animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transition: background 0.35s; }
 @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 .modal::before { content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); border-radius: 0 0 2px 2px; box-shadow: 0 0 12px var(--accent-glow); }
 .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
 .modal p { font-size: 13px; color: var(--text2); margin-bottom: 22px; line-height: 1.5; }
-.upload-zone {
-  border: 1.5px dashed rgba(255,255,255,0.08); border-radius: 14px;
-  padding: 30px; text-align: center; cursor: pointer;
-  background: var(--surface-deep); box-shadow: var(--nm-in);
-  transition: all 0.2s; margin-bottom: 16px;
-}
+.upload-zone { border: 1.5px dashed var(--border-subtle); border-radius: 14px; padding: 30px; text-align: center; cursor: pointer; background: var(--surface-deep); box-shadow: var(--nm-in); transition: all 0.2s; margin-bottom: 16px; }
 .upload-zone:hover { border-color: rgba(200,16,46,0.4); box-shadow: var(--nm-in), 0 0 16px rgba(200,16,46,0.08); }
-.upload-zone.drag-over { border-color: var(--accent); box-shadow: var(--nm-in), 0 0 24px rgba(200,16,46,0.15); }
+.upload-zone.drag-over { border-color: var(--accent); }
 .upload-icon { font-size: 30px; margin-bottom: 8px; }
 .upload-text { font-size: 13px; color: var(--text2); }
 .upload-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
 #file-input { display: none; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-.btn-cancel {
-  padding: 10px 20px; background: var(--surface-deep); border: none;
-  border-radius: 10px; color: var(--text2); font-family: var(--font); font-size: 13px;
-  cursor: pointer; box-shadow: var(--nm-btn); transition: all 0.15s;
-}
+.btn-cancel { padding: 10px 20px; background: var(--surface-deep); border: none; border-radius: 10px; color: var(--text2); font-family: 'Roboto', sans-serif; font-size: 13px; cursor: pointer; box-shadow: var(--nm-btn); transition: all 0.15s; }
 .btn-cancel:hover { color: var(--text); box-shadow: var(--nm-out); }
 .btn-cancel:active { box-shadow: var(--nm-btn-pressed); }
-.upload-feedback { font-size: 12px; color: var(--green); margin-bottom: 12px; min-height: 18px; text-shadow: 0 0 10px rgba(46,204,138,0.3); }
+.upload-feedback { font-size: 12px; color: var(--green); margin-bottom: 12px; min-height: 18px; }
+::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
 </style>
 </head>
 <body>
 
+<!-- Theme toggle (shown when app is visible) -->
+<div class="theme-toggle-wrap" id="theme-toggle-wrap">
+  <span class="toggle-icon">🌙</span>
+  <div class="toggle-track" onclick="toggleTheme()" title="Переключить тему"></div>
+  <span class="toggle-icon">☀️</span>
+</div>
+
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo-wrap">
-      <div class="login-logo-main">
-        ПРО<span class="accent-bar"></span>ДВИЖЕНИЕ
-      </div>
-      <div class="login-logo-sub">рекламная группа · Барнаул</div>
-    </div>
+    <div class="login-logo-main">ПРО<span class="accent-bar"></span>ДВИЖЕНИЕ</div>
+    <div class="login-logo-sub">рекламная группа · Барнаул</div>
     <div class="login-nm-divider"></div>
     <div class="login-subtitle">ИИ-Технолог · Расчёт смет</div>
     <div class="login-label">Корпоративный логин</div>
@@ -533,9 +334,7 @@ body {
 <div id="app">
   <div class="sidebar">
     <div class="sidebar-header">
-      <div class="sidebar-logo">
-        ПРО<span class="logo-bar"></span>ДВИЖЕНИЕ
-      </div>
+      <div class="sidebar-logo">ПРО<span class="logo-bar"></span>ДВИЖЕНИЕ</div>
       <div class="sidebar-logo-sub">ИИ-Технолог</div>
       <div class="sidebar-user">
         <div class="user-avatar" id="user-avatar">--</div>
@@ -565,9 +364,7 @@ body {
 
   <div class="main">
     <div id="welcome-view">
-      <div class="welcome-logo">
-        ПРО<span class="wl-bar"></span>ДВИЖЕНИЕ
-      </div>
+      <div class="welcome-logo">ПРО<span class="wl-bar"></span>ДВИЖЕНИЕ</div>
       <div class="welcome-sub">Выберите расчёт или создайте новый</div>
     </div>
     <div id="chat-view">
@@ -610,169 +407,231 @@ body {
 </div>
 
 <script>
-let currentUser=null,currentCalcId=null,isLoading=false,msgCounter=0;
-document.addEventListener('DOMContentLoaded',function(){if(typeof marked!=='undefined'){marked.setOptions({breaks:true,gfm:true});}});
-document.getElementById('login-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+let currentUser=null, currentCalcId=null, isLoading=false, msgCounter=0;
 
-async function doLogin(){
-  const val=document.getElementById('login-input').value.trim().toLowerCase();
-  const err=document.getElementById('login-error');err.textContent='';
-  try{
-    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:val})});
-    const data=await r.json();
-    if(!r.ok){err.textContent=data.detail||'Неверный логин';return;}
-    currentUser=val;showApp();
-  }catch(e){err.textContent='Ошибка подключения';}
-}
-function showApp(){
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').style.display='flex';
-  document.getElementById('user-avatar').textContent=currentUser.toUpperCase();
-  document.getElementById('user-display').textContent=currentUser;
-  loadCalcList();checkPricelistStatus();
-}
-function logout(){
-  currentUser=null;currentCalcId=null;
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('app').style.display='none';
-  document.getElementById('login-input').value='';
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof marked !== 'undefined') marked.setOptions({breaks: true, gfm: true});
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+});
+
+// ── THEME ────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
 }
 
-async function loadCalcList(){
-  const r=await fetch(`/api/calculations/${currentUser}`);const list=await r.json();
-  const container=document.getElementById('calc-list');
-  if(list.length===0){container.innerHTML='<div class="empty-calcs">Расчётов пока нет.<br>Нажмите «Новый расчёт»</div>';return;}
-  container.innerHTML=list.map(c=>`
-    <div class="calc-item ${c.id===currentCalcId?'active':''}" onclick="openCalc(${c.id})" id="calc-item-${c.id}">
-      <div><div class="calc-item-title">${escHtml(c.title)}</div><div class="calc-item-date">${formatDate(c.updated_at)}</div></div>
-      <div class="calc-delete" onclick="event.stopPropagation();deleteCalc(${c.id})" title="Удалить">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
+document.getElementById('login-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin() {
+  const val = document.getElementById('login-input').value.trim().toLowerCase();
+  const err = document.getElementById('login-error');
+  err.textContent = '';
+  try {
+    const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id: val})});
+    const data = await r.json();
+    if (!r.ok) { err.textContent = data.detail || 'Неверный логин'; return; }
+    currentUser = val;
+    showApp();
+  } catch(e) { err.textContent = 'Ошибка подключения'; }
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('theme-toggle-wrap').style.display = 'flex';
+  document.getElementById('user-avatar').textContent = currentUser.toUpperCase();
+  document.getElementById('user-display').textContent = currentUser;
+  loadCalcList();
+  checkPricelistStatus();
+}
+
+function logout() {
+  currentUser = null; currentCalcId = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('theme-toggle-wrap').style.display = 'none';
+  document.getElementById('login-input').value = '';
+}
+
+// ── CALC LIST ─────────────────────────────────────────────────────────────────
+async function loadCalcList() {
+  const r = await fetch(`/api/calculations/${currentUser}`);
+  const list = await r.json();
+  const container = document.getElementById('calc-list');
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-calcs">Расчётов пока нет.<br>Нажмите «Новый расчёт»</div>';
+    return;
+  }
+  container.innerHTML = '';
+  list.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'calc-item' + (c.id === currentCalcId ? ' active' : '');
+    item.id = 'calc-item-' + c.id;
+    item.innerHTML = `
+      <div class="calc-item-info">
+        <div class="calc-item-title">${escHtml(c.title)}</div>
+        <div class="calc-item-date">${formatDate(c.updated_at)}</div>
       </div>
-    </div>`).join('');
+      <button class="calc-delete-btn" title="Удалить">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </button>`;
+    item.querySelector('.calc-item-info').addEventListener('click', () => openCalc(c.id));
+    item.querySelector('.calc-delete-btn').addEventListener('click', e => { e.stopPropagation(); deleteCalc(c.id); });
+    container.appendChild(item);
+  });
 }
 
-async function startNewCalc(){
-  const r=await fetch('/api/calculation/new',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:currentUser})});
-  const data=await r.json();currentCalcId=data.id;await loadCalcList();
-  showChatView();document.getElementById('messages').innerHTML='';
-  document.getElementById('chat-title').textContent='Новый расчёт';
-  document.getElementById('chat-user-label').textContent=currentUser;
-  appendMessage('assistant','Технолог слушает. Опишите изделие — материалы, габариты, обработка, крепление.');
-}
-
-async function openCalc(id){
-  currentCalcId=id;const r=await fetch(`/api/calculation/${id}`);const data=await r.json();
+async function startNewCalc() {
+  const r = await fetch('/api/calculation/new', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id: currentUser})});
+  const data = await r.json();
+  currentCalcId = data.id;
+  await loadCalcList();
   showChatView();
-  document.getElementById('chat-title').textContent=data.title;
-  document.getElementById('chat-user-label').textContent=currentUser;
-  document.getElementById('messages').innerHTML='';
-  if(data.messages.length===0){appendMessage('assistant','Технолог слушает. Опишите изделие.');}
-  else{data.messages.forEach(m=>appendMessage(m.role,m.content));}
-  document.querySelectorAll('.calc-item').forEach(el=>el.classList.remove('active'));
-  const item=document.getElementById(`calc-item-${id}`);if(item)item.classList.add('active');
+  document.getElementById('messages').innerHTML = '';
+  document.getElementById('chat-title').textContent = 'Новый расчёт';
+  document.getElementById('chat-user-label').textContent = currentUser;
+  appendMessage('assistant', 'Технолог слушает. Опишите изделие — материалы, габариты, обработка, крепление.');
+}
+
+async function openCalc(id) {
+  currentCalcId = id;
+  const r = await fetch(`/api/calculation/${id}`);
+  const data = await r.json();
+  showChatView();
+  document.getElementById('chat-title').textContent = data.title;
+  document.getElementById('chat-user-label').textContent = currentUser;
+  document.getElementById('messages').innerHTML = '';
+  if (data.messages.length === 0) { appendMessage('assistant', 'Технолог слушает. Опишите изделие.'); }
+  else { data.messages.forEach(m => appendMessage(m.role, m.content)); }
+  document.querySelectorAll('.calc-item').forEach(el => el.classList.remove('active'));
+  const item = document.getElementById('calc-item-' + id);
+  if (item) item.classList.add('active');
   scrollToBottom();
 }
 
-async function deleteCalc(id){
-  if(!confirm('Удалить расчёт?'))return;
-  await fetch(`/api/calculation/${id}`,{method:'DELETE'});
-  if(currentCalcId===id){currentCalcId=null;document.getElementById('chat-view').style.display='none';document.getElementById('welcome-view').style.display='flex';}
+async function deleteCalc(id) {
+  if (!confirm('Удалить расчёт?')) return;
+  await fetch(`/api/calculation/${id}`, {method: 'DELETE'});
+  if (currentCalcId === id) {
+    currentCalcId = null;
+    document.getElementById('chat-view').style.display = 'none';
+    document.getElementById('welcome-view').style.display = 'flex';
+  }
   loadCalcList();
 }
 
-function showChatView(){
-  document.getElementById('welcome-view').style.display='none';
-  document.getElementById('chat-view').style.display='flex';
+// ── CHAT ──────────────────────────────────────────────────────────────────────
+function showChatView() {
+  document.getElementById('welcome-view').style.display = 'none';
+  document.getElementById('chat-view').style.display = 'flex';
 }
 
-async function sendMessage(){
-  if(isLoading||!currentCalcId)return;
-  const input=document.getElementById('chat-input');const text=input.value.trim();if(!text)return;
-  input.value='';input.style.height='auto';
-  appendMessage('user',text);
-  isLoading=true;document.getElementById('send-btn').disabled=true;
-  const typingEl=document.createElement('div');typingEl.className='msg assistant';
-  typingEl.innerHTML='<div class="msg-avatar">Т</div><div class="msg-body"><div class="msg-name">Технолог</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
-  document.getElementById('messages').appendChild(typingEl);scrollToBottom();
-  try{
-    const r=await fetch(`/api/chat/${currentCalcId}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
-    const data=await r.json();typingEl.remove();
-    appendMessage('assistant',data.reply);
-    document.getElementById('chat-title').textContent=data.title;loadCalcList();
-  }catch(e){typingEl.remove();appendMessage('assistant','Ошибка сети. Попробуйте ещё раз.');}
-  isLoading=false;document.getElementById('send-btn').disabled=false;scrollToBottom();
+async function sendMessage() {
+  if (isLoading || !currentCalcId) return;
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = ''; input.style.height = 'auto';
+  appendMessage('user', text);
+  isLoading = true; document.getElementById('send-btn').disabled = true;
+  const typingEl = document.createElement('div');
+  typingEl.className = 'msg assistant';
+  typingEl.innerHTML = '<div class="msg-avatar">Т</div><div class="msg-body"><div class="msg-name">Технолог</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+  document.getElementById('messages').appendChild(typingEl);
+  scrollToBottom();
+  try {
+    const r = await fetch(`/api/chat/${currentCalcId}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({message: text})});
+    const data = await r.json();
+    typingEl.remove();
+    appendMessage('assistant', data.reply);
+    document.getElementById('chat-title').textContent = data.title;
+    loadCalcList();
+  } catch(e) {
+    typingEl.remove();
+    appendMessage('assistant', 'Ошибка сети. Попробуйте ещё раз.');
+  }
+  isLoading = false; document.getElementById('send-btn').disabled = false;
+  scrollToBottom();
 }
 
-function appendMessage(role,content){
-  const el=document.createElement('div');el.className=`msg ${role}`;
-  const avatar=role==='user'?`<div class="msg-avatar">${currentUser?currentUser.slice(-2).toUpperCase():'МН'}</div>`:'<div class="msg-avatar">Т</div>';
-  const name=role==='user'?(currentUser||'Менеджер'):'Технолог';
-  const rendered=renderMarkdown(content);
-  const isCalc=role==='assistant'&&(content.includes('ИТОГО')||content.includes('МАТЕРИАЛЫ')||content.includes('ФОТ'));
-  const safe=encodeURIComponent(content);
-  const exportBtn=isCalc?`<button class="calc-export-btn" onclick="exportToExcel(this,'${safe}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Скачать Excel</button>`:'';
-  el.innerHTML=`${avatar}<div class="msg-body"><div class="msg-name">${name}</div><div class="msg-bubble">${rendered}${exportBtn}</div></div>`;
+function appendMessage(role, content) {
+  const el = document.createElement('div');
+  el.className = 'msg ' + role;
+  const avatar = role === 'user'
+    ? `<div class="msg-avatar">${currentUser ? currentUser.slice(-2).toUpperCase() : 'МН'}</div>`
+    : '<div class="msg-avatar">Т</div>';
+  const name = role === 'user' ? (currentUser || 'Менеджер') : 'Технолог';
+  const rendered = renderMarkdown(content);
+  const isCalc = role === 'assistant' && (content.includes('ИТОГО') || content.includes('МАТЕРИАЛЫ') || content.includes('ФОТ'));
+  const safe = encodeURIComponent(content);
+  const exportBtn = isCalc ? `<button class="calc-export-btn" onclick="exportToExcel(this,'${safe}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Скачать Excel</button>` : '';
+  el.innerHTML = `${avatar}<div class="msg-body"><div class="msg-name">${name}</div><div class="msg-bubble">${rendered}${exportBtn}</div></div>`;
   document.getElementById('messages').appendChild(el);
 }
 
-function scrollToBottom(){const m=document.getElementById('messages');setTimeout(()=>m.scrollTop=m.scrollHeight,50);}
+function scrollToBottom() { const m = document.getElementById('messages'); setTimeout(() => m.scrollTop = m.scrollHeight, 50); }
 
-document.getElementById('chat-input').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,130)+'px';});
-document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
+document.getElementById('chat-input').addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 130) + 'px'; });
+document.getElementById('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
-function exportToExcel(btn,encoded){
-  try{
-    const content=decodeURIComponent(encoded);
-    const wb=XLSX.utils.book_new();const wsData=[];
-    const lines=content.split('\n');let inTable=false;
-    for(let line of lines){
-      line=line.trim();if(!line){if(inTable){wsData.push([]);inTable=false;}continue;}
-      if(line.match(/^\|/)&&line.endsWith('|')){
-        if(line.includes('---'))continue;
-        const cells=line.split('|').slice(1,-1).map(c=>c.trim().replace(/\*\*/g,''));
-        wsData.push(cells);inTable=true;continue;
+// ── EXCEL ─────────────────────────────────────────────────────────────────────
+function exportToExcel(btn, encoded) {
+  try {
+    const content = decodeURIComponent(encoded);
+    const wb = XLSX.utils.book_new(); const wsData = [];
+    const lines = content.split('\n'); let inTable = false;
+    for (let line of lines) {
+      line = line.trim(); if (!line) { if (inTable) { wsData.push([]); inTable = false; } continue; }
+      if (line.match(/^\|/) && line.endsWith('|')) {
+        if (line.includes('---')) continue;
+        const cells = line.split('|').slice(1,-1).map(c => c.trim().replace(/\*\*/g,''));
+        wsData.push(cells); inTable = true; continue;
       }
-      if(inTable){wsData.push([]);inTable=false;}
-      const cleaned=line.replace(/\*\*/g,'').replace(/^#+\s*/,'').replace(/^[-•]\s*/,'');
-      if(cleaned)wsData.push([cleaned]);
+      if (inTable) { wsData.push([]); inTable = false; }
+      const cleaned = line.replace(/\*\*/g,'').replace(/^#+\s*/,'').replace(/^[-•]\s*/,'');
+      if (cleaned) wsData.push([cleaned]);
     }
-    const ws=XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols']=[{wch:36},{wch:10},{wch:10},{wch:13},{wch:13},{wch:46}];
-    XLSX.utils.book_append_sheet(wb,ws,'Калькуляция');
-    const title=document.getElementById('chat-title').textContent||'kalkulyaciya';
-    XLSX.writeFile(wb,title.substring(0,30).replace(/[^\w\u0400-\u04FF]/g,'_')+'.xlsx');
-    
-    // Button press animation
-    btn.style.transform='scale(0.96)';
-    setTimeout(()=>btn.style.transform='',150);
-  }catch(e){alert('Ошибка: '+e.message);}
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch:36},{wch:10},{wch:10},{wch:13},{wch:13},{wch:46}];
+    XLSX.utils.book_append_sheet(wb, ws, 'Калькуляция');
+    const title = document.getElementById('chat-title').textContent || 'kalkulyaciya';
+    XLSX.writeFile(wb, title.substring(0,30).replace(/[^\w\u0400-\u04FF]/g,'_') + '.xlsx');
+    btn.style.transform = 'scale(0.95)';
+    setTimeout(() => btn.style.transform = '', 150);
+  } catch(e) { alert('Ошибка: ' + e.message); }
 }
 
-function openPricelistModal(){document.getElementById('pricelist-modal').classList.add('open');}
-function closePricelistModal(){document.getElementById('pricelist-modal').classList.remove('open');document.getElementById('upload-feedback').textContent='';document.getElementById('upload-text').textContent='Нажмите или перетащите файл';}
-async function checkPricelistStatus(){
-  const r=await fetch('/api/pricelist-status');const data=await r.json();
-  const dot=document.getElementById('price-dot');const txt=document.getElementById('price-status-text');
-  if(data.loaded){dot.classList.add('ok');txt.textContent=`Прайс загружен (${Math.round(data.size/1024)} KB)`;}
-  else{dot.classList.remove('ok');txt.textContent='Прайс не загружен';}
+// ── PRICELIST ─────────────────────────────────────────────────────────────────
+function openPricelistModal() { document.getElementById('pricelist-modal').classList.add('open'); }
+function closePricelistModal() { document.getElementById('pricelist-modal').classList.remove('open'); document.getElementById('upload-feedback').textContent = ''; document.getElementById('upload-text').textContent = 'Нажмите или перетащите файл'; }
+async function checkPricelistStatus() {
+  const r = await fetch('/api/pricelist-status'); const data = await r.json();
+  const dot = document.getElementById('price-dot'); const txt = document.getElementById('price-status-text');
+  if (data.loaded) { dot.classList.add('ok'); txt.textContent = `Прайс загружен (${Math.round(data.size/1024)} KB)`; }
+  else { dot.classList.remove('ok'); txt.textContent = 'Прайс не загружен'; }
 }
-function handleDragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('drag-over');}
-function handleDragLeave(e){document.getElementById('upload-zone').classList.remove('drag-over');}
-function handleDrop(e){e.preventDefault();document.getElementById('upload-zone').classList.remove('drag-over');const file=e.dataTransfer.files[0];if(file)uploadFile(file);}
-function handleFileSelect(e){const file=e.target.files[0];if(file)uploadFile(file);}
-async function uploadFile(file){
-  const fb=document.getElementById('upload-feedback');const ut=document.getElementById('upload-text');
-  ut.textContent=`Загружаю: ${file.name}...`;fb.textContent='';
-  const formData=new FormData();formData.append('file',file);
-  try{
-    const r=await fetch('/api/upload-pricelist',{method:'POST',body:formData});const data=await r.json();
-    fb.textContent=`✓ Загружено: ${data.chars} символов`;ut.textContent=file.name;checkPricelistStatus();
-  }catch(e){fb.textContent='✗ Ошибка загрузки';ut.textContent='Нажмите или перетащите файл';}
+function handleDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag-over'); }
+function handleDragLeave(e) { document.getElementById('upload-zone').classList.remove('drag-over'); }
+function handleDrop(e) { e.preventDefault(); document.getElementById('upload-zone').classList.remove('drag-over'); const file = e.dataTransfer.files[0]; if (file) uploadFile(file); }
+function handleFileSelect(e) { const file = e.target.files[0]; if (file) uploadFile(file); }
+async function uploadFile(file) {
+  const fb = document.getElementById('upload-feedback'); const ut = document.getElementById('upload-text');
+  ut.textContent = `Загружаю: ${file.name}...`; fb.textContent = '';
+  const formData = new FormData(); formData.append('file', file);
+  try {
+    const r = await fetch('/api/upload-pricelist', {method:'POST', body: formData}); const data = await r.json();
+    fb.textContent = `✓ Загружено: ${data.chars} символов`; ut.textContent = file.name; checkPricelistStatus();
+  } catch(e) { fb.textContent = '✗ Ошибка загрузки'; ut.textContent = 'Нажмите или перетащите файл'; }
 }
-function renderMarkdown(text){if(typeof marked!=='undefined'){return marked.parse(text);}return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
-function escHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function formatDate(iso){if(!iso)return'';const d=new Date(iso);return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});}
-document.getElementById('pricelist-modal').addEventListener('click',function(e){if(e.target===this)closePricelistModal();});
+
+function renderMarkdown(text) { if (typeof marked !== 'undefined') return marked.parse(text); return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+function escHtml(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function formatDate(iso) { if (!iso) return ''; const d = new Date(iso); return d.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}); }
+document.getElementById('pricelist-modal').addEventListener('click', function(e) { if (e.target === this) closePricelistModal(); });
 </script>
 </body>
 </html>
