@@ -14,9 +14,10 @@ templates = Jinja2Templates(directory="templates")
 
 DB_PATH = "data/sbt.db"
 PRICE_LIST_PATH = "data/pricelist.txt"
-AMVERA_API_URL = "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek"
-AMVERA_TOKEN = os.getenv("AMVERA_TOKEN")
-MODEL = "deepseek-V3"
+# DeepSeek direct API
+DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+MODEL = "deepseek-reasoner"  # R1
 VALID_USERS = [f"sbt0{i}" for i in range(1, 6)]
 
 def init_db():
@@ -38,12 +39,20 @@ def init_db():
 init_db()
 
 def get_system_prompt():
+    # Load structured prompt from file
+    prompt_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "system_prompt.txt")
+    try:
+        with open(prompt_path, "r", encoding="utf-8") as f:
+            base_prompt = f.read()
+    except Exception:
+        base_prompt = "Ты - технолог рекламно-производственной компании. Составляй сметы себестоимости рекламных конструкций."
+
+    # Append pricelist
     price_text = ""
     if os.path.exists(PRICE_LIST_PATH):
         try:
             with open(PRICE_LIST_PATH, "r", encoding="utf-8", errors="ignore") as f:
                 raw = f.read()
-            # If JSON format (new editor) - flatten to readable text
             import json as _json, re as _re
             if raw.strip().startswith('{'):
                 try:
@@ -53,109 +62,20 @@ def get_system_prompt():
                         lines.append(f"== {group} ==")
                         for item in items:
                             lines.append(f"{item['num']}. {item['name']} | {item['unit']} | {item['price']} руб.")
-                    price_text = "\n".join(lines)[:4000]
+                    price_text = "\n".join(lines)
                 except Exception:
-                    price_text = raw[:4000]
+                    price_text = raw
             else:
-                price_text = raw[:4000]
+                price_text = raw
             price_text = _re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', price_text)
             price_text = price_text.replace('"', "'").replace('\\', '/')
         except Exception:
             price_text = ""
 
-    prompt = f"""Ты - технолог рекламно-производственной компании. Составляешь сметы себестоимости рекламных конструкций. Общаешься кратко и профессионально, без лишних слов.
-
-РЕЖИМ: ЖЕСТКОЕ СЛЕДОВАНИЕ ИНСТРУКЦИИ.
-
-СЧИТАЕШЬ: материалы, ЧПУ (фрезеровка, лазер, пробивка, полимерное покрытие, плазма), ФОТ, аппликацию пленками Oracal.
-НЕ СЧИТАЕШЬ: печать УФ/сольвент/полноцвет, ламинацию, монтаж (прочерк).
-
-ФОРМУЛА ЦЕНЫ: ЦЕНА = (Материалы + ФОТ) x 2 + ЧПУ
-
-ФОРМАТ КАЛЬКУЛЯЦИИ (строго):
----
-**Задание:** [описание]
-
-**МАТЕРИАЛЫ**
-| Наименование | Ед.изм. | Кол-во | Цена, руб | Сумма, руб | Комментарий |
-|---|---|---|---|---|---|
-**ИТОГО Материалы: XXX руб**
-
-**ЧПУ / Станочные операции**
-| Операция | Ед.изм. | Кол-во | Цена, руб | Сумма, руб | Комментарий |
-|---|---|---|---|---|---|
-**ИТОГО ЧПУ: YYY руб**
-
-**ФОТ / Ручные операции** (500 руб/час = 8.33 руб/мин)
-| Операция | Норма | Ед.изм. | Минут | Часы | Сумма |
-|---|---|---|---|---|---|
-Базовый ФОТ: ZZZ руб | Коэф. масштаба: xN | Наценка: +WWW руб
-**ИТОГО ФОТ: VVV руб**
-
-**ИТОГО:**
-- Материалы: XXX руб | ЧПУ: YYY руб | ФОТ: VVV руб
-- **ЦЕНА: (XXX + VVV) x 2 + YYY = TTT руб**
-- Монтаж: -
-
-**ПРОВЕРКА:**
-- Арифметика: [проверь каждую сумму]
-- Крепеж между слоями: [указан/не требуется]
-- Расходники: [все добавлены/не требуются]
----
-
-ПРАВИЛА ФОТ:
-- Коэф. масштаба для повторяющихся операций (резка/сварка/зачистка/оклейка):
-  до 60 мин = x1.0, 60-120 = x0.8, 120-240 = x0.7, 240-480 = x0.6
-- Фикс-операции (подготовка, очистка, упаковка) - не масштабируются
-- Наценка: <10000 руб = +15%, >=10000 руб = +10%. Округление вверх до сотни.
-
-МАТЕРИАЛЫ:
-- Листовые: правило 60% + 10% припуск. Цена: цена_листа / (Ш x Д) = руб/м2
-- Пленки: в пог.м (рулон 1.26м или 1.0м), +5% припуск
-- Источник цены: всегда указывай из прайса или ОРИЕНТИРОВОЧНО
-
-РАСХОДНИКИ (только если операция есть в заказе):
-- При оклейке пленкой: ветошь (0.5 м2/м2, мин 0.2), спирт (0.1 л/м2, мин 0.1 л), стрейч
-- При фрезеровке пластика/АКП: абразив (1 шт/7 м.п., мин 1)
-
-КРЕПЛЕНИЕ МЕЖДУ СЛОЯМИ (ОБЯЗАТЕЛЬНО):
-- Если изделие многослойное - ВСЕГДА добавляй двусторонний скотч 3М.
-- Количество: периметр элемента x 2 пог.м, минимум 0.5 м.
-- В ФОТ добавь: крепление накладного элемента - 15 мин/шт.
-
-ЧПУ:
-- Фрезеровка: ПВХ 5мм/проход 50р, Акрил 4мм/проход 50р, АКП 4мм/проход 110р
-- Лазер: металл 6мм/проход 80р, пластик 4мм/проход 60р (ПВХ лазером - нельзя!)
-- Полимерное покрытие: 550 р/м2 развертки
-- Пробивка оцинковки: 850 р/час
-
-МЕТАЛЛ/СВАРКА:
-- ФОТ: резка трубы 11 мин/рез, сварка 20 мин/шов, зачистка 10 мин/шов
-- Труба: хлыст 6м, закуп = ceil(факт/6)x6
-- Расходники: сварочные мин 300р, отрезной/зачистной круг по 1 шт/20 м.п. (мин по 1)
-
-КРЕПЛЕНИЕ: уточни способ если не указан. Самовывоз - метизы монтажные не включаем.
-
-РАБОТА С ПРАЙСОМ:
-Прайс имеет формат: Наименование | Толщина | Цена | Ед.изм. | Обработка (станок)
-- Колонка "Обработка" показывает на каком станке режется материал - СТРОГО следуй этому
-- Ищи каждый материал в прайсе, используй логику (акрил = оргстекло, АКП = композит и т.д.)
-- Если нашел - пиши точное название из прайса и используй указанный станок/обработку
-- Если не нашел - СТОП, напиши: "В прайсе нет [название]. Возможно: [2-3 варианта из прайса]. Уточни."
-- Только по запросу "считай ориентировочно" - ставь ОРИЕНТИРОВОЧНО
-
-ПРОВЕРКА ПЕРЕД ВЫДАЧЕЙ:
-1. Пересчитай все суммы
-2. Проверь формулу ЦЕНЫ
-3. Есть многослойность -> добавлен скотч?
-4. Есть оклейка -> добавлены ветошь/спирт/стрейч?
-5. Все цены из прайса или помечены ОРИЕНТИРОВОЧНО?
-
-ПРАЙС:
-{price_text if price_text else "Прайс не загружен. Цены - ОРИЕНТИРОВОЧНО."}
-"""
-    prompt = prompt.replace("\u2014", "-").replace("\u2013", "-").replace("\u00ab", "<<").replace("\u00bb", ">>")
-    return prompt
+    if price_text:
+        return base_prompt + "\n\n" + price_text
+    else:
+        return base_prompt + "\n\nПРАЙС: не загружен. Цены — ОРИЕНТИРОВОЧНО."
 
 
 # ── Routes ───────────────────────────────────────────────────────────────────
@@ -249,27 +169,41 @@ async def chat(calc_id: int, msg: ChatMessage):
             content = system_prompt + "\n\n" + content
         api_messages.append({"role": role, "text": content})
 
-    token = AMVERA_TOKEN or ""
+    api_key = DEEPSEEK_API_KEY
     assistant_message = ""
 
     for _attempt in range(2):
         try:
-            body = {"model": MODEL, "messages": api_messages}
+            # DeepSeek API uses OpenAI-compatible format with system role
+            # Build messages with system role (supported by direct API)
+            system_prompt = get_system_prompt()
+            openai_messages = [{"role": "system", "content": system_prompt}]
+            for m in messages[:-1]:  # history without last message
+                openai_messages.append({"role": m["role"], "content": m["content"]})
+            openai_messages.append({"role": "user", "content": messages[-1]["content"]})
+
+            body = {
+                "model": MODEL,
+                "messages": openai_messages,
+                "max_tokens": 8000,
+                "temperature": 0.7
+            }
             payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
-            async with httpx.AsyncClient(timeout=180.0) as client:
+            async with httpx.AsyncClient(timeout=300.0) as client:
                 resp = await client.post(
-                    AMVERA_API_URL,
+                    DEEPSEEK_API_URL,
                     headers={
-                        "X-Auth-Token": f"Bearer {token}",
-                        "Content-Type": "application/json; charset=utf-8",
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
                     },
                     content=payload
                 )
                 if resp.status_code != 200:
-                    raise Exception(f"API {resp.status_code}: {resp.text[:200]}")
+                    raise Exception(f"API {resp.status_code}: {resp.text[:300]}")
                 data = resp.json()
-                raw = data["choices"][0]["message"].get("text") or data["choices"][0]["message"].get("content") or ""
+                raw = data["choices"][0]["message"].get("content") or ""
                 import re as re_mod
+                # Strip <think> tags from R1
                 assistant_message = re_mod.sub(r"<think>.*?</think>", "", raw, flags=re_mod.DOTALL).strip()
                 ticks = chr(96) * 3
                 assistant_message = re_mod.sub(r"^" + ticks + r"[a-z]*", "", assistant_message.lstrip()).strip()
