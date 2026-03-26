@@ -39,56 +39,43 @@ def init_db():
 init_db()
 
 def get_system_prompt():
-    import os as _os
-    # Try all possible paths and log which one works
+    import os as _os, re as _re
     paths = [
         "/app/data/system_prompt.txt",
-        "data/system_prompt.txt",
         _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "data", "system_prompt.txt"),
     ]
     base_prompt = ""
     for path in paths:
-        exists = _os.path.exists(path)
-        print(f"[PROMPT] Trying {path} - exists={exists}", flush=True)
-        if exists:
+        if _os.path.exists(path):
             try:
                 with open(path, "r", encoding="utf-8") as f:
                     base_prompt = f.read().strip()
                 print(f"[PROMPT] Loaded {len(base_prompt)} chars from {path}", flush=True)
                 break
             except Exception as e:
-                print(f"[PROMPT] Error reading {path}: {e}", flush=True)
+                print(f"[PROMPT] Error: {e}", flush=True)
 
     if not base_prompt:
-        print("[PROMPT] WARNING: no prompt file found, using default!", flush=True)
-        base_prompt = "Ты - технолог рекламно-производственной компании ПРОДВИЖЕНИЕ. Составляй сметы себестоимости."
+        print("[PROMPT] File not found, using fallback!", flush=True)
+        base_prompt = "Ты - технолог ПРОДВИЖЕНИЕ. Составляй сметы."
 
     # Append pricelist
-    price_text = ""
     if _os.path.exists(PRICE_LIST_PATH):
         try:
             with open(PRICE_LIST_PATH, "r", encoding="utf-8", errors="ignore") as f:
                 raw = f.read()
-            import json as _json, re as _re
+            import json as _json
             if raw.strip().startswith('{'):
-                try:
-                    pdata = _json.loads(raw)
-                    lines = []
-                    for group, items in pdata.items():
-                        lines.append(f"== {group} ==")
-                        for item in items:
-                            lines.append(f"{item['num']}. {item['name']} | {item['unit']} | {item['price']} руб.")
-                    price_text = "\n".join(lines)
-                except Exception:
-                    price_text = raw
-            else:
-                price_text = raw
-            price_text = _re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', price_text)
+                pdata = _json.loads(raw)
+                lines = []
+                for group, items in pdata.items():
+                    lines.append(f"== {group} ==")
+                    for item in items:
+                        lines.append(f"{item['num']}. {item['name']} | {item['unit']} | {item['price']} руб.")
+                base_prompt += "\n\n" + "\n".join(lines)
         except Exception:
-            price_text = ""
+            pass
 
-    if price_text:
-        return base_prompt + "\n\n" + price_text
     return base_prompt
 
 
@@ -181,13 +168,10 @@ async def chat(calc_id: int, msg: ChatMessage):
     for _attempt in range(2):
         try:
             system_prompt = get_system_prompt()
-            api_messages = []
-            for i, m in enumerate(messages):
-                role = m["role"]
-                msg_content = m["content"]
-                if i == 0 and role == "user":
-                    msg_content = system_prompt + "\n\n" + msg_content
-                api_messages.append({"role": role, "text": msg_content})
+            # Use system role - Amvera proxy supports it and doesn't count against body size limit
+            api_messages = [{"role": "system", "text": system_prompt}]
+            for m in messages:
+                api_messages.append({"role": m["role"], "text": m["content"]})
 
             body = {"model": MODEL, "messages": api_messages}
             # Clean payload - remove control chars that break Amvera proxy JSON parsing
