@@ -348,34 +348,18 @@ td:last-child .price-cell{border-radius:0;}
 
     <!-- PRICE EDITOR -->
     <div id="price-editor-view">
-      <div class="price-editor-header">
-        <div class="price-editor-title">Редактор прайса</div>
-        <div class="price-editor-actions">
-          <button class="btn-nm" onclick="addPriceRow()">+ Добавить строку</button>
-          <button class="btn-nm btn-nm-accent" onclick="savePricelist()">Сохранить</button>
-          <button class="btn-nm" onclick="closePriceEditor()">Закрыть</button>
-        </div>
+      <div class="pe-header no-print">
+        <div class="pe-title">Прайс-лист</div>
+        <input class="pe-search" id="pe-search" placeholder="Поиск..." oninput="peSearch(this.value)">
+        <button class="btn-nm btn-nm-print" onclick="window.print()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Распечатать
+        </button>
+        <button class="btn-nm btn-nm-accent" onclick="peSave()">Сохранить</button>
+        <button class="btn-nm" onclick="closePriceEditor()">Закрыть</button>
       </div>
-      <div style="padding:12px 20px 0;">
-        <input class="price-search" id="price-search" placeholder="Поиск по прайсу..." oninput="filterPrice(this.value)">
-      </div>
-      <div class="price-stats" id="price-stats"></div>
-      <div class="price-table-wrap">
-        <table class="price-table" id="price-table">
-          <thead>
-            <tr>
-              <th style="width:30%">Наименование</th>
-              <th style="width:10%">Толщина</th>
-              <th style="width:15%">Цена, руб</th>
-              <th style="width:10%">Ед.изм.</th>
-              <th style="width:30%">Обработка (станок)</th>
-              <th style="width:5%"></th>
-            </tr>
-          </thead>
-          <tbody id="price-tbody"></tbody>
-        </table>
-      </div>
-    </div>
+      <div class="pe-tabs no-print" id="pe-tabs"></div>
+      <div class="pe-body" id="pe-body"></div>
+    </div>    </div>
   </div>
 </div>
 
@@ -569,109 +553,125 @@ document.getElementById('chat-input').addEventListener('input', function() { thi
 document.getElementById('chat-input').addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 
 // ── PRICE EDITOR ──────────────────────────────────────────────────────────────
+const PE_DEFAULT = {"Листовые и рулонные": [{"num": 1, "name": "ПВХ 3 мм", "unit": "м.кв", "price": 510}, {"num": 2, "name": "ПВХ 5 мм", "unit": "м.кв", "price": 846}, {"num": 3, "name": "ПВХ 6 мм", "unit": "м.кв", "price": 960}, {"num": 4, "name": "ПВХ 8 мм", "unit": "м.кв", "price": 1350}, {"num": 5, "name": "ПВХ 10 мм", "unit": "м.кв", "price": 2388}, {"num": 6, "name": "Акрил / Оргстекло (прозрачное) 2 мм", "unit": "м.кв", "price": 1470}, {"num": 7, "name": "Акрил / Оргстекло (матовый / молочный) 3 мм", "unit": "м.кв", "price": 2100}, {"num": 8, "name": "Акрил / Оргстекло (прозрачное) 3 мм", "unit": "м.кв", "price": 1827}, {"num": 9, "name": "Акрил / Оргстекло (прозрачное) 10 мм", "unit": "м.кв", "price": 5844}, {"num": 10, "name": "АКП / Композит 3 мм (белый)", "unit": "м.кв", "price": 2157}, {"num": 11, "name": "АКП / Композит 3 мм (серебро)", "unit": "м.кв", "price": 2157}, {"num": 12, "name": "Оцинковка 0,45 мм (в рулоне)", "unit": "м.пог", "price": 986}, {"num": 13, "name": "Оцинковка 0,5 мм (в рулоне)", "unit": "м.пог", "price": 1130}, {"num": 14, "name": "Оцинковка 0,7 мм (в рулоне)", "unit": "м.пог", "price": 1274}, {"num": 15, "name": "Оцинковка 1,0 мм (лист)", "unit": "м.кв", "price": 960}, {"num": 16, "name": "Алюнатур 1,5 мм", "unit": "м.кв", "price": 7800}, {"num": 17, "name": "Алюминий 1,5 мм", "unit": "м.кв", "price": 2053}, {"num": 18, "name": "Алюминий 2 мм", "unit": "м.кв", "price": 2828}, {"num": 19, "name": "Алюминий 3 мм", "unit": "м.кв", "price": 5502}, {"num": 20, "name": "Нержавейка 1,5 мм", "unit": "м.кв", "price": 3806}, {"num": 21, "name": "Лист стальной / сталь черная 3 мм", "unit": "м.кв", "price": 1324}, {"num": 22, "name": "Пленка 641 / Oracal 641 (цветная) шир. 1.26 м", "unit": "м.пог", "price": 436}, {"num": 23, "name": "Пленка 8500 / Oracal 8500 (цветная) шир. 1.26 м", "unit": "м.пог", "price": 1032}, {"num": 24, "name": "Пленка монтажная шир. 1.26 м", "unit": "м.пог", "price": 465}, {"num": 25, "name": "ПЭТ / Полистирол (прозрачный) 2 мм", "unit": "м.кв", "price": 760}, {"num": 26, "name": "ПЭТ / Полистирол (матовый / молочный) 2 мм", "unit": "м.кв", "price": 1760}, {"num": 27, "name": "ПЭТ / Полистирол (прозрачный) 3 мм", "unit": "м.кв", "price": 2176}, {"num": 28, "name": "ПЭТ / Полистирол (матовый / молочный) 3 мм", "unit": "м.кв", "price": 2400}], "Мет. сортамент": [{"num": 1, "name": "Труба профильная 15x15x1,5", "unit": "м.пог", "price": 58}, {"num": 2, "name": "Труба профильная 20x20x1,5", "unit": "м.пог", "price": 69}, {"num": 3, "name": "Труба профильная 25x25x1,5", "unit": "м.пог", "price": 85}, {"num": 4, "name": "Труба профильная 25x25x2,0", "unit": "м.пог", "price": 97}, {"num": 5, "name": "Труба профильная 40x20x1,5", "unit": "м.пог", "price": 102}, {"num": 6, "name": "Труба профильная 40x20x2,0", "unit": "м.пог", "price": 112}, {"num": 7, "name": "Труба профильная 40x40x1,5", "unit": "м.пог", "price": 157}, {"num": 8, "name": "Труба профильная 40x40x2,0", "unit": "м.пог", "price": 198}], "Вспомогательные": [{"num": 1, "name": "Герметик", "unit": "шт.", "price": 706}, {"num": 2, "name": "Грунт / грунтовка", "unit": "кг.", "price": 300}, {"num": 3, "name": "Клей", "unit": "шт.", "price": 420}, {"num": 4, "name": "Краска", "unit": "л.", "price": 1200}, {"num": 5, "name": "Растворитель", "unit": "л.", "price": 350}, {"num": 6, "name": "Обезжириватель / спирт", "unit": "л.", "price": 300}, {"num": 7, "name": "Скотч 3М двусторонний листовой", "unit": "м.кв", "price": 1500}, {"num": 8, "name": "Скотч 3М двусторонний узкий 5 мм", "unit": "м.пог", "price": 14}, {"num": 9, "name": "Скотч-брайт", "unit": "шт.", "price": 114}, {"num": 10, "name": "Метизы / саморезы", "unit": "шт.", "price": 3}, {"num": 11, "name": "Круг отрезной", "unit": "шт.", "price": 100}, {"num": 12, "name": "Круг зачистной", "unit": "шт.", "price": 100}, {"num": 13, "name": "Абразив", "unit": "шт.", "price": 100}, {"num": 14, "name": "Стрейч-пленка", "unit": "м.пог", "price": 2}], "Операции ЧПУ": [{"num": 1, "name": "Фрезеровка ПВХ", "unit": "м.пог", "price": 40}, {"num": 2, "name": "Лазерная резка Акрил", "unit": "м.пог", "price": 40}, {"num": 3, "name": "Фрезеровка АКП (Композит)", "unit": "м.пог", "price": 110}, {"num": 4, "name": "Лазерная резка Оцинкованный металл", "unit": "м.пог", "price": 60}, {"num": 5, "name": "Лазерная резка Алюминий", "unit": "м.пог", "price": 60}, {"num": 6, "name": "Лазерная резка Нержавейка", "unit": "м.пог", "price": 60}, {"num": 7, "name": "Лазерная резка Алюнатур", "unit": "м.пог", "price": 60}, {"num": 8, "name": "Полимерное покрытие", "unit": "м.кв", "price": 550}, {"num": 9, "name": "Пробивка оцинковки", "unit": "час", "price": 850}, {"num": 10, "name": "Плазменная резка стали", "unit": "м.пог", "price": 80}], "Печать": [{"num": 1, "name": "УФ печать на ПВХ (без белого)", "unit": "м.кв", "price": 1125}, {"num": 2, "name": "УФ печать на Акрил (без белого)", "unit": "м.кв", "price": 1625}, {"num": 3, "name": "УФ печать на Композит АКП (без белого)", "unit": "м.кв", "price": 1400}, {"num": 4, "name": "УФ печать на Оцинкованный металл (без белого)", "unit": "м.кв", "price": 1400}, {"num": 5, "name": "УФ печать на Алюминий (без белого)", "unit": "м.кв", "price": 1400}, {"num": 6, "name": "УФ печать на Нержавейка (без белого)", "unit": "м.кв", "price": 1400}, {"num": 7, "name": "УФ печать на Алюнатур (без белого)", "unit": "м.кв", "price": 1400}, {"num": 8, "name": "УФ печать на ПВХ (с белым)", "unit": "м.кв", "price": 2000}, {"num": 9, "name": "УФ печать на Акрил (с белым)", "unit": "м.кв", "price": 3000}, {"num": 10, "name": "УФ печать на Композит АКП (с белым)", "unit": "м.кв", "price": 2800}, {"num": 11, "name": "УФ печать на Оцинкованный металл (с белым)", "unit": "м.кв", "price": 2800}, {"num": 12, "name": "УФ печать на Алюминий (с белым)", "unit": "м.кв", "price": 2800}, {"num": 13, "name": "УФ печать на Нержавейка (с белым)", "unit": "м.кв", "price": 2800}, {"num": 14, "name": "УФ печать на Алюнатур (с белым)", "unit": "м.кв", "price": 2800}, {"num": 15, "name": "Сольвентная печать 720 dpi (с пленкой)", "unit": "м.кв", "price": 725}, {"num": 16, "name": "Сольвентная печать 1440 dpi (с пленкой)", "unit": "м.кв", "price": 1000}, {"num": 17, "name": "Ламинация", "unit": "м.кв", "price": 375}]};
+let peData = {};
+let peActiveTab = '';
+
 async function openPriceEditor() {
   showView('price');
-  const r = await fetch('/api/pricelist-content');
-  const data = await r.json();
-  priceLines = data.lines || [];
-  renderPriceTable(priceLines);
+  try {
+    const r = await fetch('/api/pricelist-content');
+    const d = await r.json();
+    if (d.content && d.content.trim().startsWith('{')) {
+      peData = JSON.parse(d.content);
+    } else {
+      peData = JSON.parse(JSON.stringify(PE_DEFAULT));
+    }
+  } catch(e) {
+    peData = JSON.parse(JSON.stringify(PE_DEFAULT));
+  }
+  peActiveTab = Object.keys(peData)[0];
+  peRenderTabs();
+  peRenderBody(peActiveTab);
 }
 
 function closePriceEditor() {
   showView(currentCalcId ? 'chat' : 'welcome');
 }
 
-function renderPriceTable(lines) {
-  const tbody = document.getElementById('price-tbody');
-  tbody.innerHTML = '';
-  document.getElementById('price-stats').textContent = `Позиций: ${lines.length}`;
-  
-  lines.forEach((line, i) => {
-    const parts = line.split('|').map(s => s.trim());
-    const name = parts[0] || '';
-    const thickness = parts[1] || '';
-    const price = parts[2] || '';
-    const unit = parts[3] || '';
-    const machine = parts[4] || '';
-    
-    const tr = document.createElement('tr');
-    tr.className = 'price-row';
-    tr.dataset.index = i;
-    tr.innerHTML = `
-      <td><input class="price-cell" value="${escAttr(name)}" placeholder="Наименование материала" data-field="name"></td>
-      <td><input class="price-cell" value="${escAttr(thickness)}" placeholder="3мм" data-field="thickness" style="text-align:center;"></td>
-      <td><input class="price-cell" value="${escAttr(price)}" placeholder="0.00" data-field="price" style="text-align:right;"></td>
-      <td><input class="price-cell" value="${escAttr(unit)}" placeholder="шт/м²/м" data-field="unit" style="text-align:center;"></td>
-      <td><input class="price-cell" value="${escAttr(machine)}" placeholder="фрезер / лазер / ручная" data-field="machine"></td>
-      <td class="price-delete-cell"><div class="price-cell" onclick="deletePriceRow(this)">✕</div></td>`;
-    tbody.appendChild(tr);
-  });
+function peRenderTabs() {
+  const tabs = document.getElementById('pe-tabs');
+  tabs.innerHTML = Object.keys(peData).map(g =>
+    '<button class="pe-tab ' + (g===peActiveTab?'active':'') + '" onclick="peSetTab(\'' + escHtml(g) + '\')">' + escHtml(g) + '</button>'
+  ).join('');
 }
 
-function filterPrice(query) {
-  const q = query.toLowerCase();
-  const rows = document.querySelectorAll('#price-tbody .price-row');
-  let visible = 0;
-  rows.forEach(row => {
-    const text = row.innerText.toLowerCase();
-    const show = !q || text.includes(q);
-    row.style.display = show ? '' : 'none';
-    if (show) visible++;
-  });
-  document.getElementById('price-stats').textContent = q ? `Найдено: ${visible} из ${priceLines.length}` : `Позиций: ${priceLines.length}`;
+function peSetTab(group) {
+  peActiveTab = group;
+  peRenderTabs();
+  peRenderBody(group);
+  document.getElementById('pe-search').value = '';
 }
 
-function addPriceRow() {
-  const tbody = document.getElementById('price-tbody');
-  const tr = document.createElement('tr');
-  tr.className = 'price-row';
-  tr.innerHTML = `
-    <td><input class="price-cell" value="" placeholder="Наименование материала" data-field="name"></td>
-    <td><input class="price-cell" value="" placeholder="3мм" data-field="thickness" style="text-align:center;"></td>
-    <td><input class="price-cell" value="" placeholder="0.00" data-field="price" style="text-align:right;"></td>
-    <td><input class="price-cell" value="" placeholder="шт/м²/м" data-field="unit" style="text-align:center;"></td>
-    <td><input class="price-cell" value="" placeholder="фрезер / лазер / ручная" data-field="machine"></td>
-    <td class="price-delete-cell"><div class="price-cell" onclick="deletePriceRow(this)">✕</div></td>`;
-  tbody.appendChild(tr);
-  tr.querySelector('input').focus();
-  document.getElementById('price-stats').textContent = `Позиций: ${tbody.querySelectorAll('.price-row').length}`;
+function peRenderBody(group, filter) {
+  const body = document.getElementById('pe-body');
+  const rows = peData[group] || [];
+  const q = (filter || '').toLowerCase();
+  const filtered = q ? rows.filter(r => r.name.toLowerCase().includes(q)) : rows;
+
+  const trs = filtered.map((r) => {
+    const ri = rows.indexOf(r);
+    const g = escHtml(group);
+    return '<tr class="pe-tr" data-group="' + g + '" data-idx="' + ri + '">' +
+      '<td><input class="pe-input pe-input-num" value="' + r.num + '" data-field="num" onchange="peUpdate(this)"></td>' +
+      '<td><input class="pe-input" value="' + escAttr(r.name) + '" data-field="name" onchange="peUpdate(this)"></td>' +
+      '<td><input class="pe-input" value="' + escAttr(r.unit) + '" data-field="unit" style="width:80px" onchange="peUpdate(this)"></td>' +
+      '<td><input class="pe-input pe-input-price" value="' + r.price + '" data-field="price" onchange="peUpdate(this)"></td>' +
+      '<td><button class="pe-del" onclick="peDel(this)" title="Удалить">×</button></td>' +
+      '</tr>';
+  }).join('');
+
+  body.innerHTML = '<div class="pe-stats no-print">' + filtered.length + ' позиций' + (q?' (поиск)':'') + '</div>' +
+    '<table class="pe-table">' +
+    '<thead><tr>' +
+    '<th style="width:52px">№</th>' +
+    '<th>Наименование</th>' +
+    '<th style="width:80px">Ед.изм.</th>' +
+    '<th style="width:110px">Цена, руб.</th>' +
+    '<th style="width:36px" class="no-print"></th>' +
+    '</tr></thead>' +
+    '<tbody>' + trs + '</tbody>' +
+    '</table>' +
+    '<div class="pe-add-row no-print"><button class="btn-nm" onclick="peAdd(\'' + escHtml(group) + '\')">+ Добавить позицию</button></div>';
 }
 
-function deletePriceRow(btn) {
+function peUpdate(input) {
+  const tr = input.closest('tr');
+  const group = tr.dataset.group;
+  const idx = parseInt(tr.dataset.idx);
+  const field = input.dataset.field;
+  let val = input.value.trim();
+  if (field === 'price' || field === 'num') val = parseFloat(val) || 0;
+  if (peData[group] && peData[group][idx] !== undefined) peData[group][idx][field] = val;
+}
+
+function peDel(btn) {
+  if (!confirm('Удалить позицию?')) return;
   const tr = btn.closest('tr');
-  tr.style.opacity = '0';
-  tr.style.transform = 'translateX(20px)';
-  tr.style.transition = 'all .2s';
-  setTimeout(() => { tr.remove(); const cnt = document.querySelectorAll('#price-tbody .price-row').length; document.getElementById('price-stats').textContent = `Позиций: ${cnt}`; }, 200);
+  const group = tr.dataset.group;
+  const idx = parseInt(tr.dataset.idx);
+  peData[group].splice(idx, 1);
+  peData[group].forEach((r, i) => r.num = i + 1);
+  peRenderBody(group, document.getElementById('pe-search').value);
 }
 
-async function savePricelist() {
-  const rows = document.querySelectorAll('#price-tbody .price-row');
-  const lines = [];
-  rows.forEach(row => {
-    const name = row.querySelector('[data-field="name"]').value.trim();
-    const thickness = row.querySelector('[data-field="thickness"]').value.trim();
-    const price = row.querySelector('[data-field="price"]').value.trim();
-    const unit = row.querySelector('[data-field="unit"]').value.trim();
-    const machine = row.querySelector('[data-field="machine"]').value.trim();
-    if (name) lines.push([name, thickness, price, unit, machine].join(' | '));
-  });
-  const content = lines.join('\n');
+function peAdd(group) {
+  const rows = peData[group];
+  rows.push({num: rows.length + 1, name: '', unit: 'м.кв', price: 0});
+  peRenderBody(group);
+  const inputs = document.querySelectorAll('#pe-body .pe-input:not(.pe-input-num):not(.pe-input-price)');
+  if (inputs.length) inputs[inputs.length-1].focus();
+}
+
+function peSearch(q) {
+  peRenderBody(peActiveTab, q);
+}
+
+async function peSave() {
+  const content = JSON.stringify(peData, null, 2);
   try {
-    const r = await fetch('/api/pricelist-save', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({content})});
-    const data = await r.json();
-    if (data.ok) {
-      priceLines = lines;
+    const r = await fetch('/api/pricelist-save', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content})});
+    const d = await r.json();
+    if (d.ok) {
       checkPricelistStatus();
       const btn = document.querySelector('.btn-nm-accent');
-      const orig = btn.textContent;
-      btn.textContent = '✓ Сохранено';
+      const orig = btn.textContent; btn.textContent = '\u2713 Сохранено';
       setTimeout(() => btn.textContent = orig, 2000);
     }
-  } catch(e) { alert('Ошибка сохранения: ' + e.message); }
+  } catch(e) { alert('Ошибка: ' + e.message); }
 }
 
-// ── EXCEL ─────────────────────────────────────────────────────────────────────
+// ── EXCEL ─────────────────────────────────────────────────────────────────────// ── EXCEL ─────────────────────────────────────────────────────────────────────
 function exportToExcel(btn, encoded) {
   try {
     const content = decodeURIComponent(encoded);

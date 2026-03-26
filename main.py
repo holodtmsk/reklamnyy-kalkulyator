@@ -42,12 +42,26 @@ def get_system_prompt():
     if os.path.exists(PRICE_LIST_PATH):
         try:
             with open(PRICE_LIST_PATH, "r", encoding="utf-8", errors="ignore") as f:
-                raw = f.read()[:4000]
+                raw = f.read()
+            # If JSON format (new editor) - flatten to readable text
+            import json as _json, re as _re
+            if raw.strip().startswith('{'):
+                try:
+                    pdata = _json.loads(raw)
+                    lines = []
+                    for group, items in pdata.items():
+                        lines.append(f"== {group} ==")
+                        for item in items:
+                            lines.append(f"{item['num']}. {item['name']} | {item['unit']} | {item['price']} руб.")
+                    price_text = "\n".join(lines)[:4000]
+                except Exception:
+                    price_text = raw[:4000]
+            else:
+                price_text = raw[:4000]
+            price_text = _re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', price_text)
+            price_text = price_text.replace('"', "'").replace('\\', '/')
         except Exception:
-            raw = ""
-        import re as _re
-        price_text = _re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', raw)
-        price_text = price_text.replace('"', "'").replace('\\', '/')
+            price_text = ""
 
     prompt = f"""Ты - технолог рекламно-производственной компании. Составляешь сметы себестоимости рекламных конструкций. Общаешься кратко и профессионально, без лишних слов.
 
