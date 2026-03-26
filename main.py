@@ -17,7 +17,7 @@ PRICE_LIST_PATH = "data/pricelist.txt"
 # DeepSeek direct API
 DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
-MODEL = "deepseek-reasoner"  # R1
+MODEL = "deepseek-chat"  # V3
 VALID_USERS = [f"sbt0{i}" for i in range(1, 6)]
 
 def init_db():
