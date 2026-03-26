@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -12,17 +12,11 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
 DB_PATH = "data/sbt.db"
 PRICE_LIST_PATH = "data/pricelist.txt"
-
 AMVERA_API_URL = "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek"
 AMVERA_TOKEN = os.getenv("AMVERA_TOKEN")
 MODEL = "deepseek-V3"
-
 VALID_USERS = [f"sbt0{i}" for i in range(1, 6)]
 
 def init_db():
@@ -52,9 +46,7 @@ def get_system_prompt():
         except Exception:
             raw = ""
         import re as _re
-        # Убираем управляющие символы
         price_text = _re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', raw)
-        # Убираем лишние кавычки которые ломают JSON
         price_text = price_text.replace('"', "'").replace('\\', '/')
 
     prompt = f"""Ты - технолог рекламно-производственной компании. Составляешь сметы себестоимости рекламных конструкций. Общаешься кратко и профессионально, без лишних слов.
@@ -113,10 +105,9 @@ def get_system_prompt():
 - При фрезеровке пластика/АКП: абразив (1 шт/7 м.п., мин 1)
 
 КРЕПЛЕНИЕ МЕЖДУ СЛОЯМИ (ОБЯЗАТЕЛЬНО):
-- Если изделие многослойное (буквы на основе, карман на стенде, элемент на элементе) - ВСЕГДА добавляй двусторонний скотч 3М для крепления слоев между собой.
-- Количество: периметр элемента x 2 пог.м (полосы по краям), минимум 0.5 м.
-- Найди в прайсе: "скотч 2-х стор.3М" - цена в м.
-- В ФОТ добавь операцию "Крепление накладного элемента" - 15 мин/шт.
+- Если изделие многослойное - ВСЕГДА добавляй двусторонний скотч 3М.
+- Количество: периметр элемента x 2 пог.м, минимум 0.5 м.
+- В ФОТ добавь: крепление накладного элемента - 15 мин/шт.
 
 ЧПУ:
 - Фрезеровка: ПВХ 5мм/проход 50р, Акрил 4мм/проход 50р, АКП 4мм/проход 110р
@@ -132,82 +123,203 @@ def get_system_prompt():
 КРЕПЛЕНИЕ: уточни способ если не указан. Самовывоз - метизы монтажные не включаем.
 
 РАБОТА С ПРАЙСОМ:
-- Ищи каждый материал в прайсе, используй логику (акрил = оргстекло, АКП = композит, профтруба = труба)
+- Ищи каждый материал в прайсе, используй логику (акрил = оргстекло, АКП = композит)
 - Если нашел - пиши точное название из прайса
-- Если не нашел - СТОП, напиши: "В прайсе нет [название]. Возможно: [2-3 варианта из прайса с ценами]. Уточни."
-- Только по запросу менеджера "считай ориентировочно" - ставь ОРИЕНТИРОВОЧНО
+- Если не нашел - СТОП, напиши: "В прайсе нет [название]. Возможно: [2-3 варианта]. Уточни."
+- Только по запросу "считай ориентировочно" - ставь ОРИЕНТИРОВОЧНО
 
 ПРОВЕРКА ПЕРЕД ВЫДАЧЕЙ:
-1. Пересчитай все суммы в таблицах
-2. Проверь итоговую формулу ЦЕНЫ
-3. Проверь: есть ли многослойность -> добавлен ли скотч?
-4. Проверь: есть ли оклейка -> добавлены ли ветошь/спирт/стрейч?
-5. Проверь: все цены из прайса или помечены ОРИЕНТИРОВОЧНО?
+1. Пересчитай все суммы
+2. Проверь формулу ЦЕНЫ
+3. Есть многослойность -> добавлен скотч?
+4. Есть оклейка -> добавлены ветошь/спирт/стрейч?
+5. Все цены из прайса или помечены ОРИЕНТИРОВОЧНО?
 
 ПРАЙС:
 {price_text if price_text else "Прайс не загружен. Цены - ОРИЕНТИРОВОЧНО."}
 """
-
-    # Очищаем от символов которые ломают JSON
     prompt = prompt.replace("\u2014", "-").replace("\u2013", "-").replace("\u00ab", "<<").replace("\u00bb", ">>")
     return prompt
 
 
+# ── Routes ───────────────────────────────────────────────────────────────────
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 
+class LoginRequest(BaseModel):
+    user_id: str
 
-@app.get("/api/test-ai")
-async def test_ai():
-    import os
-    token = os.environ.get("AMVERA_TOKEN", "")
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            body = {
-                "model": "deepseek-R1",
-                "messages": [
-                    {"role": "user", "text": "Привет!"}
-                ]
-            }
-            r = await client.post(
-                "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek",
-                headers={
-                    "X-Auth-Token": f"Bearer {token}",
-                    "Content-Type": "application/json"
-                },
-                json=body
-            )
-            return {"status": r.status_code, "response": r.text[:500]}
-    except Exception as e:
-        return {"error": str(e)}
+@app.post("/api/login")
+async def login(req: LoginRequest):
+    if req.user_id not in VALID_USERS:
+        raise HTTPException(status_code=401, detail="Неверный логин")
+    return {"ok": True, "user_id": req.user_id}
 
 
-@app.get("/api/debug-request")
-async def debug_request():
-    try:
-        with open("/app/data/last_request.txt", "r") as f:
-            return {"content": f.read()}
-    except:
-        return {"content": "No request logged yet"}
+@app.get("/api/calculations/{user_id}")
+async def get_calculations(user_id: str):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT id, title, updated_at FROM calculations WHERE user_id=? ORDER BY updated_at DESC", (user_id,))
+    rows = c.fetchall()
+    conn.close()
+    return [{"id": r[0], "title": r[1], "updated_at": r[2]} for r in rows]
 
 
-@app.get("/api/debug-price")
-async def debug_price():
+@app.get("/api/calculation/{calc_id}")
+async def get_calculation(calc_id: int):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT id, title, messages, user_id FROM calculations WHERE id=?", (calc_id,))
+    row = c.fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="Not found")
+    msgs = json.loads(row[2]) if row[2] else []
+    return {"id": row[0], "title": row[1], "messages": msgs, "user_id": row[3]}
+
+
+class NewCalcRequest(BaseModel):
+    user_id: str
+
+@app.post("/api/calculation/new")
+async def new_calculation(req: NewCalcRequest):
+    now = datetime.utcnow().isoformat()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("INSERT INTO calculations (user_id, title, messages, created_at, updated_at) VALUES (?,?,?,?,?)",
+              (req.user_id, "Новый расчёт", "[]", now, now))
+    calc_id = c.lastrowid
+    conn.commit()
+    conn.close()
+    return {"id": calc_id}
+
+
+@app.delete("/api/calculation/{calc_id}")
+async def delete_calculation(calc_id: int):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM calculations WHERE id=?", (calc_id,))
+    conn.commit()
+    conn.close()
+    return {"ok": True}
+
+
+class ChatMessage(BaseModel):
+    message: str
+
+@app.post("/api/chat/{calc_id}")
+async def chat(calc_id: int, msg: ChatMessage):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT messages, user_id, title FROM calculations WHERE id=?", (calc_id,))
+    row = c.fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=404, detail="Calculation not found")
+
+    messages = json.loads(row[0]) if row[0] else []
+    messages.append({"role": "user", "content": msg.message})
+
+    system_prompt = get_system_prompt()
+    api_messages = []
+    for i, m in enumerate(messages):
+        role = m["role"]
+        content = m["content"]
+        if i == 0 and role == "user":
+            content = system_prompt + "\n\n" + content
+        api_messages.append({"role": role, "text": content})
+
+    token = AMVERA_TOKEN or ""
+    assistant_message = ""
+
+    for _attempt in range(2):
+        try:
+            body = {"model": MODEL, "messages": api_messages}
+            payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
+            async with httpx.AsyncClient(timeout=180.0) as client:
+                resp = await client.post(
+                    AMVERA_API_URL,
+                    headers={
+                        "X-Auth-Token": f"Bearer {token}",
+                        "Content-Type": "application/json; charset=utf-8",
+                    },
+                    content=payload
+                )
+                if resp.status_code != 200:
+                    raise Exception(f"API {resp.status_code}: {resp.text[:200]}")
+                data = resp.json()
+                raw = data["choices"][0]["message"].get("text") or data["choices"][0]["message"].get("content") or ""
+                import re as re_mod
+                assistant_message = re_mod.sub(r"<think>.*?</think>", "", raw, flags=re_mod.DOTALL).strip()
+                ticks = chr(96) * 3
+                assistant_message = re_mod.sub(r"^" + ticks + r"[a-z]*", "", assistant_message.lstrip()).strip()
+                assistant_message = re_mod.sub(ticks + r"$", "", assistant_message.rstrip()).strip()
+                break
+        except Exception as e:
+            if _attempt == 0:
+                await asyncio.sleep(2)
+                continue
+            assistant_message = f"Ошибка API: {str(e)}"
+
+    messages.append({"role": "assistant", "content": assistant_message})
+
+    # Update title from first user message
+    title = row[2]
+    user_msgs = [m for m in messages if m["role"] == "user"]
+    if len(user_msgs) == 1:
+        title = user_msgs[0]["content"][:60].replace("\n", " ")
+
+    now = datetime.utcnow().isoformat()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE calculations SET messages=?, title=?, updated_at=? WHERE id=?",
+              (json.dumps(messages, ensure_ascii=False), title, now, calc_id))
+    conn.commit()
+    conn.close()
+
+    return {"reply": assistant_message, "title": title}
+
+
+@app.post("/api/upload-pricelist")
+async def upload_pricelist(file: UploadFile = File(...)):
+    content = await file.read()
+    text = ""
+    if file.filename.endswith(".pdf"):
+        try:
+            import pdfplumber
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                for page in pdf.pages:
+                    t = page.extract_text(x_tolerance=3, y_tolerance=3)
+                    if t:
+                        text += t + "\n"
+        except Exception:
+            text = content.decode("utf-8", errors="ignore")
+    else:
+        try:
+            text = content.decode("utf-8")
+        except Exception:
+            try:
+                text = content.decode("cp1251")
+            except Exception:
+                text = content.decode("utf-8", errors="ignore")
+
+    os.makedirs("data", exist_ok=True)
+    with open(PRICE_LIST_PATH, "w", encoding="utf-8") as f:
+        f.write(text)
+    return {"ok": True, "chars": len(text)}
+
+
+@app.get("/api/pricelist-status")
+async def pricelist_status():
     if os.path.exists(PRICE_LIST_PATH):
-        with open(PRICE_LIST_PATH, "r", encoding="utf-8") as f:
-            text = f.read()
-        # Find ПВХ in the text
-        lines = text.split("\n")
-        pvh_lines = [l for l in lines if "ПВХ" in l or "пвх" in l.lower()]
-        return {
-            "total_chars": len(text),
-            "total_lines": len(lines),
-            "pvh_lines_count": len(pvh_lines),
-            "pvh_sample": pvh_lines[:5],
-            "first_500": text[:500],
-        }
-    return {"error": "no pricelist"}
+        size = os.path.getsize(PRICE_LIST_PATH)
+        return {"loaded": True, "size": size}
+    return {"loaded": False, "size": 0}
 
-# ── Routes ──────────────────────────────────────────────────────────────────
 
 @app.get("/api/pricelist-content")
 async def pricelist_content():
@@ -217,6 +329,7 @@ async def pricelist_content():
         text = f.read()
     lines = [l for l in text.split("\n") if l.strip()]
     return {"content": text, "lines": lines}
+
 
 @app.post("/api/pricelist-save")
 async def pricelist_save(request: Request):

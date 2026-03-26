@@ -57,8 +57,8 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 .toggle-icon{font-size:13px;line-height:1;user-select:none;}
 
 /* ── LOGIN ── */
-#login-screen{display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:20px;}
-.login-theme-row{display:flex;align-items:center;gap:8px;}
+#login-screen{display:flex;align-items:center;justify-content:center;height:100vh;position:relative;}
+.login-theme-row{position:absolute;top:18px;right:18px;display:flex;align-items:center;gap:8px;}
 .login-theme-label{font-size:11px;color:var(--text3);letter-spacing:0.08em;}
 .login-card{width:380px;padding:44px 40px;background:var(--surface);border-radius:24px;box-shadow:var(--nm-out-lg);position:relative;overflow:hidden;transition:background .35s,box-shadow .35s;}
 .login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--highlight),transparent);}
