@@ -15,9 +15,9 @@ templates = Jinja2Templates(directory="templates")
 DB_PATH = "data/sbt.db"
 PRICE_LIST_PATH = "data/pricelist.txt"
 # DeepSeek direct API
-DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
-MODEL = "deepseek-chat"  # V3
+AMVERA_API_URL = "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek"
+AMVERA_TOKEN = os.getenv("AMVERA_TOKEN")
+MODEL = "deepseek-V3"
 VALID_USERS = [f"sbt0{i}" for i in range(1, 6)]
 
 def init_db():
@@ -398,41 +398,36 @@ async def chat(calc_id: int, msg: ChatMessage):
     # messages will be passed to DeepSeek via openai_messages in the API call below
     pass
 
-    api_key = DEEPSEEK_API_KEY
+    token = AMVERA_TOKEN or ""
     assistant_message = ""
 
     for _attempt in range(2):
         try:
-            # DeepSeek API uses OpenAI-compatible format with system role
-            # Build messages with system role (supported by direct API)
             system_prompt = get_system_prompt()
-            openai_messages = [{"role": "system", "content": system_prompt}]
-            for m in messages[:-1]:  # history without last message
-                openai_messages.append({"role": m["role"], "content": m["content"]})
-            openai_messages.append({"role": "user", "content": messages[-1]["content"]})
+            api_messages = []
+            for i, m in enumerate(messages):
+                role = m["role"]
+                msg_content = m["content"]
+                if i == 0 and role == "user":
+                    msg_content = system_prompt + "\n\n" + msg_content
+                api_messages.append({"role": role, "text": msg_content})
 
-            body = {
-                "model": MODEL,
-                "messages": openai_messages,
-                "max_tokens": 8000,
-                "temperature": 0.0
-            }
+            body = {"model": MODEL, "messages": api_messages}
             payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
-            async with httpx.AsyncClient(timeout=300.0) as client:
+            async with httpx.AsyncClient(timeout=180.0) as client:
                 resp = await client.post(
-                    DEEPSEEK_API_URL,
+                    AMVERA_API_URL,
                     headers={
-                        "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json",
+                        "X-Auth-Token": f"Bearer {token}",
+                        "Content-Type": "application/json; charset=utf-8",
                     },
                     content=payload
                 )
                 if resp.status_code != 200:
-                    raise Exception(f"API {resp.status_code}: {resp.text[:300]}")
+                    raise Exception(f"API {resp.status_code}: {resp.text[:200]}")
                 data = resp.json()
-                raw = data["choices"][0]["message"].get("content") or ""
+                raw = data["choices"][0]["message"].get("text") or data["choices"][0]["message"].get("content") or ""
                 import re as re_mod
-                # Strip <think> tags from R1
                 assistant_message = re_mod.sub(r"<think>.*?</think>", "", raw, flags=re_mod.DOTALL).strip()
                 ticks = chr(96) * 3
                 assistant_message = re_mod.sub(r"^" + ticks + r"[a-z]*", "", assistant_message.lstrip()).strip()
