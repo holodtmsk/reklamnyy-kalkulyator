@@ -180,7 +180,7 @@ async def chat(calc_id: int, msg: ChatMessage):
                 "model": MODEL,
                 "messages": openai_messages,
                 "max_tokens": 8000,
-                "temperature": 0.7
+                "temperature": 0.0
             }
             payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
             async with httpx.AsyncClient(timeout=300.0) as client:
