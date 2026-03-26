@@ -160,14 +160,8 @@ async def chat(calc_id: int, msg: ChatMessage):
     messages = json.loads(row[0]) if row[0] else []
     messages.append({"role": "user", "content": msg.message})
 
-    system_prompt = get_system_prompt()
-    api_messages = []
-    for i, m in enumerate(messages):
-        role = m["role"]
-        content = m["content"]
-        if i == 0 and role == "user":
-            content = system_prompt + "\n\n" + content
-        api_messages.append({"role": role, "text": content})
+    # messages will be passed to DeepSeek via openai_messages in the API call below
+    pass
 
     api_key = DEEPSEEK_API_KEY
     assistant_message = ""
