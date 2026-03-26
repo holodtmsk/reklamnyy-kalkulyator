@@ -123,9 +123,11 @@ def get_system_prompt():
 КРЕПЛЕНИЕ: уточни способ если не указан. Самовывоз - метизы монтажные не включаем.
 
 РАБОТА С ПРАЙСОМ:
-- Ищи каждый материал в прайсе, используй логику (акрил = оргстекло, АКП = композит)
-- Если нашел - пиши точное название из прайса
-- Если не нашел - СТОП, напиши: "В прайсе нет [название]. Возможно: [2-3 варианта]. Уточни."
+Прайс имеет формат: Наименование | Толщина | Цена | Ед.изм. | Обработка (станок)
+- Колонка "Обработка" показывает на каком станке режется материал - СТРОГО следуй этому
+- Ищи каждый материал в прайсе, используй логику (акрил = оргстекло, АКП = композит и т.д.)
+- Если нашел - пиши точное название из прайса и используй указанный станок/обработку
+- Если не нашел - СТОП, напиши: "В прайсе нет [название]. Возможно: [2-3 варианта из прайса]. Уточни."
 - Только по запросу "считай ориентировочно" - ставь ОРИЕНТИРОВОЧНО
 
 ПРОВЕРКА ПЕРЕД ВЫДАЧЕЙ:
@@ -288,7 +290,22 @@ async def chat(calc_id: int, msg: ChatMessage):
 async def upload_pricelist(file: UploadFile = File(...)):
     content = await file.read()
     text = ""
-    if file.filename.endswith(".pdf"):
+    fname = (file.filename or "").lower()
+    if fname.endswith(".xlsx") or fname.endswith(".xls"):
+        try:
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True, data_only=True)
+            lines = []
+            for ws in wb.worksheets:
+                for row in ws.iter_rows(values_only=True):
+                    parts = [str(c).strip() if c is not None else "" for c in row]
+                    # Skip completely empty rows
+                    if any(p for p in parts):
+                        lines.append(", ".join(p for p in parts if p))
+            text = "\n".join(lines)
+        except Exception as e:
+            text = f"Ошибка чтения Excel: {e}"
+    elif fname.endswith(".pdf"):
         try:
             import pdfplumber
             with pdfplumber.open(io.BytesIO(content)) as pdf:
