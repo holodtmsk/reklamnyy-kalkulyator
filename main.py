@@ -195,7 +195,7 @@ async def chat(calc_id: int, msg: ChatMessage):
                     AMVERA_API_URL,
                     headers={
                         "X-Auth-Token": f"Bearer {token}",
-                        "Content-Type": "application/json; charset=utf-8",
+                        "Content-Type": "application/json",
                     },
                     content=payload
                 )
