@@ -46,11 +46,18 @@ def get_system_prompt():
                  _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "data", "system_prompt.txt")]:
         if _os.path.exists(path):
             try:
-                txt = open(path, encoding="utf-8").read().strip()
-                if len(txt) > 500:
-                    print(f"[PROMPT] file {len(txt)} chars", flush=True)
-                    base = txt
-                    break
+                for enc in ["utf-8", "cp1251", "latin-1"]:
+                    try:
+                        txt = open(path, encoding=enc).read().strip()
+                        if len(txt) > 500 and "\u0442\u0435\u0445\u043d\u043e\u043b\u043e\u0433" in txt:
+                            print(f"[PROMPT] file {len(txt)} chars enc={enc}", flush=True)
+                            base = txt
+                            break
+                    except Exception:
+                        continue
+                else:
+                    continue
+                break
             except Exception as e:
                 print(f"[PROMPT] err {e}", flush=True)
     else:
