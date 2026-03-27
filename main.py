@@ -12,8 +12,8 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-DB_PATH = "data/sbt.db"
-PRICE_LIST_PATH = "data/pricelist.txt"
+DB_PATH = "data/db/sbt.db"
+PRICE_LIST_PATH = "data/db/pricelist.txt"
 # DeepSeek direct API
 AMVERA_API_URL = "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek"
 AMVERA_TOKEN = os.getenv("AMVERA_TOKEN")
@@ -21,7 +21,7 @@ MODEL = "deepseek-V3"
 VALID_USERS = [f"sbt0{i}" for i in range(1, 6)]
 
 def init_db():
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("data/db", exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""CREATE TABLE IF NOT EXISTS calculations (
@@ -263,14 +263,13 @@ async def chat(calc_id: int, msg: ChatMessage):
     for _attempt in range(2):
         try:
             system_prompt = get_system_prompt()
-            # Use system role - Amvera proxy supports it and doesn't count against body size limit
-            api_messages = [{"role": "system", "text": system_prompt}]
+            api_messages = [{"role": "system", "content": system_prompt}]
             for m in messages:
-                api_messages.append({"role": m["role"], "text": m["content"]})
+                api_messages.append({"role": m["role"], "content": m["content"]})
 
             body = {"model": MODEL, "messages": api_messages}
             # Clean payload - remove control chars that break Amvera proxy JSON parsing
-            payload = json.dumps(body, ensure_ascii=True).encode("utf-8")
+            payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
             async with httpx.AsyncClient(timeout=180.0) as client:
                 resp = await client.post(
                     AMVERA_API_URL,
