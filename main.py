@@ -38,6 +38,25 @@ def init_db():
 
 init_db()
 
+# Fix encoding of system_prompt.txt in persistent volume on startup
+def fix_prompt_on_startup():
+    import os as _os
+    src = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "data", "system_prompt.txt")
+    dst = "/app/data/system_prompt.txt"
+    if not _os.path.exists(src):
+        return
+    good = open(src, encoding="utf-8").read()
+    # Always overwrite persistent volume copy with correct UTF-8 version from image
+    try:
+        _os.makedirs("/app/data", exist_ok=True)
+        open(dst, "w", encoding="utf-8").write(good)
+        print(f"[STARTUP] prompt written to {dst}, {len(good)} chars", flush=True)
+    except Exception as e:
+        print(f"[STARTUP] could not write prompt: {e}", flush=True)
+
+fix_prompt_on_startup()
+
+
 def get_system_prompt():
     import os as _os
 
