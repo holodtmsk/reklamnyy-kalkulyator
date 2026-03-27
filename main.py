@@ -373,6 +373,26 @@ async def pricelist_status():
     return {"loaded": False, "size": 0}
 
 
+
+@app.get("/fix-prompt-encoding")
+async def fix_prompt_encoding():
+    import os as _os
+    path = "/app/data/system_prompt.txt"
+    if not _os.path.exists(path):
+        return {"error": "file not found"}
+    # Read with auto-detection
+    raw = open(path, "rb").read()
+    for enc in ["utf-8", "cp1251", "latin-1"]:
+        try:
+            txt = raw.decode(enc)
+            if "технолог" in txt and len(txt) > 500:
+                # Rewrite as proper UTF-8
+                open(path, "w", encoding="utf-8").write(txt)
+                return {"ok": True, "encoding_was": enc, "chars": len(txt), "first_100": txt[:100]}
+        except Exception:
+            continue
+    return {"error": "could not detect encoding"}
+
 @app.get("/api/pricelist-content")
 async def pricelist_content():
     if not os.path.exists(PRICE_LIST_PATH):
