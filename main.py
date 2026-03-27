@@ -40,7 +40,7 @@ init_db()
 
 def get_system_prompt():
     import os as _os
-    path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "data", "system_prompt.txt")
+    path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "prompt", "system_prompt.txt")
     txt = open(path, encoding="utf-8").read().strip()
     print(f"[PROMPT] loaded {len(txt)} chars", flush=True)
 
