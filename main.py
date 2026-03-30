@@ -15,9 +15,9 @@ templates = Jinja2Templates(directory="templates")
 DB_PATH = "data/db/sbt.db"
 PRICE_LIST_PATH = "data/db/pricelist.txt"
 # DeepSeek direct API
-AMVERA_API_URL = "https://kong-proxy.yc.amvera.ru/api/v1/models/deepseek"
-AMVERA_TOKEN = os.getenv("AMVERA_TOKEN")
-MODEL = "deepseek-V3"
+AMVERA_API_URL = "https://api.deepseek.com/v1/chat/completions"
+AMVERA_TOKEN = os.getenv("DEEPSEEK_API_KEY")
+MODEL = "deepseek-chat"
 VALID_USERS = [f"sbt0{i}" for i in range(1, 6)]
 
 def init_db():
@@ -194,7 +194,7 @@ async def chat(calc_id: int, msg: ChatMessage):
                 resp = await client.post(
                     AMVERA_API_URL,
                     headers={
-                        "X-Auth-Token": f"Bearer {token}",
+                        "Authorization": f"Bearer {token}",
                         "Content-Type": "application/json",
                     },
                     content=payload
