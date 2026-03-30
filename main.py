@@ -272,7 +272,7 @@ async def upload_pricelist(file: UploadFile = File(...)):
             except Exception:
                 text = content.decode("utf-8", errors="ignore")
 
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("data/db", exist_ok=True)
     with open(PRICE_LIST_PATH, "w", encoding="utf-8") as f:
         f.write(text)
     return {"ok": True, "chars": len(text)}
@@ -320,7 +320,7 @@ async def pricelist_content():
 async def pricelist_save(request: Request):
     body = await request.json()
     content = body.get("content", "")
-    os.makedirs("data", exist_ok=True)
+    os.makedirs("data/db", exist_ok=True)
     with open(PRICE_LIST_PATH, "w", encoding="utf-8") as f:
         f.write(content)
     return {"ok": True, "chars": len(content)}
