@@ -18,7 +18,7 @@ PRICE_LIST_PATH = "data/db/pricelist.txt"
 AMVERA_API_URL = "https://api.deepseek.com/v1/chat/completions"
 AMVERA_TOKEN = os.getenv("DEEPSEEK_API_KEY")
 MODEL = "deepseek-chat"
-VALID_USERS = [f"sbt0{i}" for i in range(1, 6)]
+VALID_USERS = [f"sbt0{i}" for i in range(1, 7)]
 
 def init_db():
     os.makedirs("data/db", exist_ok=True)
@@ -160,6 +160,23 @@ async def delete_calculation(calc_id: int):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("DELETE FROM calculations WHERE id=?", (calc_id,))
+    conn.commit()
+    conn.close()
+    return {"ok": True}
+
+
+class RenameRequest(BaseModel):
+    title: str
+
+@app.post("/api/calculation/{calc_id}/rename")
+async def rename_calculation(calc_id: int, req: RenameRequest):
+    title = req.title.strip()[:80]
+    if not title:
+        raise HTTPException(status_code=400, detail="Title required")
+    now = datetime.utcnow().isoformat()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("UPDATE calculations SET title=?, updated_at=? WHERE id=?", (title, now, calc_id))
     conn.commit()
     conn.close()
     return {"ok": True}
