@@ -187,7 +187,7 @@ async def chat(calc_id: int, msg: ChatMessage):
             for m in messages:
                 api_messages.append({"role": m["role"], "content": m["content"]})
 
-            body = {"model": MODEL, "messages": api_messages, "max_tokens": 2000}
+            body = {"model": MODEL, "messages": api_messages, "max_tokens": 4000}
             # Clean payload - remove control chars that break Amvera proxy JSON parsing
             payload = json.dumps(body, ensure_ascii=False).encode("utf-8")
             async with httpx.AsyncClient(timeout=180.0) as client:
