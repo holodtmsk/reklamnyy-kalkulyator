@@ -55,7 +55,14 @@ def get_system_prompt():
                 for group, items in pdata.items():
                     lines.append(f"== {group} ==")
                     for item in items:
-                        lines.append(f"{item['num']}. {item['name']} | {item['unit']} | {item['price']} руб.")
+                        dim = ""
+                        w = item.get('width_mm', 0)
+                        h = item.get('height_mm', 0)
+                        if w and h:
+                            dim = f" | лист {w}×{h} мм"
+                        elif w:
+                            dim = f" | ширина {w} мм"
+                        lines.append(f"{item['num']}. {item['name']} | {item['unit']} | {item['price']} руб.{dim}")
                 txt += "\n\n" + "\n".join(lines)
         except Exception:
             pass
