@@ -1409,10 +1409,10 @@ async function loadManagerStats() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
             Лог
           </button>
-          <button class="btn-show-log" onclick="toggleManagerLog('${uid}')">Показать лог</button>
+          <button class="btn-show-log" id="btn-log-${uid}" onclick="toggleManagerLog('${uid}')">Открыть лог</button>
         </div>
-        <div class="manager-log" id="mlog-${uid}">
-          <div class="log-empty">Нажмите «Показать лог»</div>
+        <div class="manager-log" id="mlog-${uid}" style="display:none;">
+          <div class="log-empty">Нажмите «Открыть лог»</div>
         </div>`;
       grid.appendChild(card);
     }
@@ -1452,8 +1452,9 @@ async function loadManagerLog(uid) {
     logEl.innerHTML = logs.map(e => {
       const label = ACTION_LABELS[e.action] || e.action;
       const detail = e.details ? ` — ${escHtml(e.details)}` : '';
-      const dt = new Date(e.created_at + 'Z');
-      const timeStr = dt.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}) + ' ' + dt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+      const dtStr = e.created_at.replace('+00:00', 'Z').replace(/\.\d+Z$/, 'Z');
+      const dt = new Date(dtStr);
+      const timeStr = isNaN(dt) ? e.created_at.slice(0,16).replace('T',' ') : dt.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}) + ' ' + dt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
       return `<div class="log-entry"><span class="log-time">${timeStr}</span><span class="log-action ${e.action}">${label}${detail}</span></div>`;
     }).join('');
   } catch(e) {
@@ -1463,11 +1464,15 @@ async function loadManagerLog(uid) {
 
 async function toggleManagerLog(uid) {
   const logEl = document.getElementById('mlog-' + uid);
-  if (logEl.classList.contains('open')) {
-    logEl.classList.remove('open');
+  const btn = document.getElementById('btn-log-' + uid);
+  const isOpen = logEl.style.display === 'block';
+  if (isOpen) {
+    logEl.style.display = 'none';
+    if (btn) btn.textContent = 'Открыть лог';
     return;
   }
-  logEl.classList.add('open');
+  logEl.style.display = 'block';
+  if (btn) btn.textContent = 'Закрыть лог';
   await loadManagerLog(uid);
 }
 
