@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 import sqlite3, json, os, httpx, asyncio
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 import io
 
@@ -46,7 +46,7 @@ def init_db():
 init_db()
 
 def log_action(user_id: str, action: str, details: str = ''):
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("INSERT INTO activity_log (user_id, action, details, created_at) VALUES (?,?,?,?)",
@@ -161,7 +161,7 @@ class NewCalcRequest(BaseModel):
 
 @app.post("/api/calculation/new")
 async def new_calculation(req: NewCalcRequest):
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("INSERT INTO calculations (user_id, title, messages, created_at, updated_at) VALUES (?,?,?,?,?)",
@@ -195,7 +195,7 @@ async def rename_calculation(calc_id: int, req: RenameRequest):
     title = req.title.strip()[:80]
     if not title:
         raise HTTPException(status_code=400, detail="Title required")
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("UPDATE calculations SET title=?, updated_at=? WHERE id=?", (title, now, calc_id))
@@ -269,7 +269,7 @@ async def chat(calc_id: int, msg: ChatMessage):
     if len(user_msgs) == 1:
         title = user_msgs[0]["content"][:60].replace("\n", " ")
 
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("UPDATE calculations SET messages=?, title=?, updated_at=? WHERE id=?",
@@ -385,7 +385,7 @@ async def admin_verify(req: AdminVerifyRequest):
 
 @app.get("/api/admin/stats")
 async def admin_stats():
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     month_start = datetime(now.year, now.month, 1).isoformat()
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -410,14 +410,34 @@ async def admin_delete_manager_calcs(user_id: str):
     conn.close()
     return {"ok": True}
 
-@app.get("/api/admin/logs/{user_id}")
-async def admin_get_logs(user_id: str):
+def purge_old_logs():
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT action, details, created_at FROM activity_log WHERE user_id=? ORDER BY created_at DESC LIMIT 100", (user_id,))
+    c.execute("DELETE FROM activity_log WHERE created_at < ?", (cutoff,))
+    conn.commit()
+    conn.close()
+
+@app.get("/api/admin/logs/{user_id}")
+async def admin_get_logs(user_id: str):
+    purge_old_logs()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT action, details, created_at FROM activity_log WHERE user_id=? ORDER BY created_at DESC LIMIT 500", (user_id,))
     rows = c.fetchall()
     conn.close()
     return [{"action": r[0], "details": r[1] or '', "created_at": r[2]} for r in rows]
+
+@app.delete("/api/admin/logs/{user_id}")
+async def admin_clear_logs(user_id: str):
+    if user_id not in VALID_USERS:
+        raise HTTPException(status_code=404, detail="User not found")
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM activity_log WHERE user_id=?", (user_id,))
+    conn.commit()
+    conn.close()
+    return {"ok": True}
 
 class LogoutRequest(BaseModel):
     user_id: str

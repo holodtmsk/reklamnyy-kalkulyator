@@ -344,7 +344,7 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 .btn-del-all:hover{background:rgba(255,68,85,0.15);border-color:rgba(255,68,85,0.4);}
 .btn-show-log{padding:8px 12px;background:var(--surface-deep);border:none;border-radius:9px;color:var(--text2);font-family:'Roboto',sans-serif;font-size:11px;cursor:pointer;box-shadow:var(--nm-btn);transition:all .15s;}
 .btn-show-log:hover{color:var(--text);}
-.manager-log{display:none;border-top:1px solid var(--border-subtle);max-height:220px;overflow-y:auto;}
+.manager-log{display:none;border-top:1px solid var(--border-subtle);height:340px;overflow-y:auto;}
 .manager-log.open{display:block;}
 .manager-log::-webkit-scrollbar{width:3px;}
 .manager-log::-webkit-scrollbar-thumb{background:var(--border-subtle);border-radius:2px;}
@@ -1404,11 +1404,15 @@ async function loadManagerStats() {
           </div>
         </div>
         <div class="manager-card-footer">
-          <button class="btn-del-all" onclick="adminDeleteAllCalcs('${uid}')">Удалить все расчёты</button>
-          <button class="btn-show-log" onclick="toggleManagerLog('${uid}')">Лог</button>
+          <button class="btn-del-all" onclick="adminDeleteAllCalcs('${uid}')">Удалить расчёты</button>
+          <button class="btn-del-all" style="flex:none;padding:8px 10px;" onclick="adminClearLogs('${uid}')" title="Очистить лог">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            Лог
+          </button>
+          <button class="btn-show-log" onclick="toggleManagerLog('${uid}')">Показать лог</button>
         </div>
         <div class="manager-log" id="mlog-${uid}">
-          <div class="log-empty">Загрузка...</div>
+          <div class="log-empty">Нажмите «Показать лог»</div>
         </div>`;
       grid.appendChild(card);
     }
@@ -1435,13 +1439,8 @@ const ACTION_LABELS = {
   pricelist_view: 'Открыл просмотр прайса',
 };
 
-async function toggleManagerLog(uid) {
+async function loadManagerLog(uid) {
   const logEl = document.getElementById('mlog-' + uid);
-  if (logEl.classList.contains('open')) {
-    logEl.classList.remove('open');
-    return;
-  }
-  logEl.classList.add('open');
   logEl.innerHTML = '<div class="log-empty">Загрузка...</div>';
   try {
     const r = await fetch(`/api/admin/logs/${uid}`);
@@ -1460,6 +1459,27 @@ async function toggleManagerLog(uid) {
   } catch(e) {
     logEl.innerHTML = '<div class="log-empty">Ошибка загрузки</div>';
   }
+}
+
+async function toggleManagerLog(uid) {
+  const logEl = document.getElementById('mlog-' + uid);
+  if (logEl.classList.contains('open')) {
+    logEl.classList.remove('open');
+    return;
+  }
+  logEl.classList.add('open');
+  await loadManagerLog(uid);
+}
+
+async function adminClearLogs(uid) {
+  if (!confirm(`Очистить лог активности ${uid.toUpperCase()}?`)) return;
+  try {
+    await fetch(`/api/admin/logs/${uid}`, {method:'DELETE'});
+    const logEl = document.getElementById('mlog-' + uid);
+    if (logEl.classList.contains('open')) {
+      logEl.innerHTML = '<div class="log-empty">Лог очищен</div>';
+    }
+  } catch(e) { alert('Ошибка: ' + e.message); }
 }
 </script>
 
