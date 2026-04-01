@@ -197,10 +197,8 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 .calc-export-btn::before{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,var(--highlight),transparent);border-radius:10px 10px 0 0;pointer-events:none;}
 .calc-export-btn:hover{box-shadow:var(--nm-btn),0 0 14px rgba(200,16,46,0.2);color:var(--accent);transform:translateY(-1px);}
 .calc-export-btn:active{box-shadow:var(--nm-btn-pressed);transform:translateY(0);}
-.calc-layout-btn{margin-top:6px;margin-left:6px;padding:7px 12px;background:var(--surface-deep);border:none;border-radius:10px;color:#4a9eff;font-family:'Roboto Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:5px;box-shadow:var(--nm-btn);transition:all .15s;position:relative;overflow:hidden;}
-.calc-layout-btn::before{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,var(--highlight),transparent);border-radius:10px 10px 0 0;pointer-events:none;}
-.calc-layout-btn:hover{box-shadow:var(--nm-btn),0 0 14px rgba(74,158,255,0.25);color:#6fb3ff;transform:translateY(-1px);}
-.calc-layout-btn:active{box-shadow:var(--nm-btn-pressed);transform:translateY(0);}
+.calc-layout-btn{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 8px;background:rgba(74,158,255,0.08);border:1px solid rgba(74,158,255,0.35);border-radius:4px;color:#4a9eff;font-size:11px;font-weight:500;font-family:'Roboto',sans-serif;cursor:pointer;vertical-align:middle;transition:background .15s;}
+.calc-layout-btn:hover{background:rgba(74,158,255,0.18);}
 .layout-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .layout-overlay.open{display:flex;}
 .layout-modal{background:var(--surface);border-radius:20px;padding:24px;width:min(720px,96vw);max-height:90vh;overflow-y:auto;box-shadow:var(--nm-out-lg);position:relative;transition:background .35s;}
@@ -208,15 +206,12 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 .layout-modal-hdr h3{font-family:'Roboto Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .layout-modal-close{width:28px;height:28px;flex-shrink:0;background:var(--surface-deep);border:none;border-radius:8px;color:var(--text2);cursor:pointer;box-shadow:var(--nm-btn);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
 .layout-modal-close:hover{color:var(--accent);}
-.layout-dims-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
-.layout-dim-pill{padding:4px 10px;background:var(--surface-deep);border-radius:20px;font-size:11px;color:var(--text2);box-shadow:var(--nm-in);}
-.layout-dim-pill b{color:var(--text);}
-.layout-svg-wrap{background:var(--surface-deep);border-radius:14px;box-shadow:var(--nm-in);overflow:hidden;line-height:0;}
-.layout-svg-wrap svg{display:block;width:100%;height:auto;}
-.layout-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.layout-svg-wrap{background:var(--surface-deep);border-radius:14px;box-shadow:var(--nm-in);overflow-x:auto;overflow-y:hidden;line-height:0;}
+.layout-svg-wrap svg{display:block;width:auto;height:auto;max-width:none;}
+.layout-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
 .layout-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);}
-.layout-legend-swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0;}
-.layout-no-parts{padding:12px 0;font-size:12px;color:var(--text3);text-align:center;}
+.layout-legend-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0;}
+.layout-legend-swatch-dash{width:20px;height:3px;flex-shrink:0;border-radius:1px;}
 .typing-indicator{display:flex;gap:5px;padding:14px 18px;background:var(--surface-msg-ai);border-radius:4px 16px 16px 16px;box-shadow:var(--nm-out);width:fit-content;}
 .typing-dot{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:nmPulse 1.4s ease infinite;}
 .typing-dot:nth-child(2){animation-delay:.2s;}.typing-dot:nth-child(3){animation-delay:.4s;}
@@ -1275,20 +1270,39 @@ function parsePartsFromText(text) {
   return parts;
 }
 
-function packShelves(parts, maxW, maxH) {
-  const items = [];
-  parts.forEach(p => { for (let i=0;i<p.n;i++) items.push({w:p.w,h:p.h}); });
-  items.sort((a,b) => b.h-a.h || b.w-a.w);
+function packOneSheet(items, maxW, maxH) {
+  const GAP = 4;
   const placed = [];
-  let cx=0, cy=0, rowH=0;
-  const GAP=4;
-  for (const item of items) {
-    if (cx+item.w > maxW+1) { cy+=rowH+GAP; cx=0; rowH=0; }
-    if (cy+item.h > maxH+1) break;
-    placed.push({w:item.w, h:item.h, x:cx, y:cy});
-    cx += item.w+GAP; rowH=Math.max(rowH,item.h);
+  const usedIdx = new Set();
+  let cx = 0, cy = 0, rowH = 0;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.w > maxW || item.h > maxH) continue; // part bigger than sheet
+    if (cx + item.w > maxW) { cy += rowH + GAP; cx = 0; rowH = 0; }
+    if (cy + item.h > maxH + 1) continue; // doesn't fit vertically in new row
+    placed.push({w: item.w, h: item.h, x: cx, y: cy});
+    usedIdx.add(i);
+    cx += item.w + GAP;
+    rowH = Math.max(rowH, item.h);
   }
-  return placed;
+  const leftover = items.filter((_, i) => !usedIdx.has(i));
+  return {placed, leftover};
+}
+
+function packMultiSheet(parts, maxW, maxH) {
+  const items = [];
+  parts.forEach(p => { for (let i = 0; i < p.n; i++) items.push({w: p.w, h: p.h}); });
+  items.sort((a, b) => b.h - a.h || b.w - a.w);
+  const sheets = [];
+  let remaining = [...items];
+  while (remaining.length > 0 && sheets.length < 12) {
+    const {placed, leftover} = packOneSheet(remaining, maxW, maxH);
+    if (placed.length === 0) break; // nothing fits at all
+    sheets.push(placed);
+    if (leftover.length >= remaining.length) break; // no progress
+    remaining = leftover;
+  }
+  return sheets.length > 0 ? sheets : [[]];
 }
 
 function openLayoutModal(matName, dims, userText) {
@@ -1314,89 +1328,123 @@ function closeLayoutModal() {
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeLayoutModal(); });
 
 function renderLayoutSVG(matName, dims, parts) {
-  const SW = dims.w, SH = dims.h; // sheet mm
-  const VW = 640, VH = 400; // SVG viewBox
-  const PAD = 30;
-  const scaleX = (VW-PAD*2)/SW, scaleY = (VH-PAD*2)/SH;
-  const sc = Math.min(scaleX, scaleY);
-  const offX = PAD + (VW-PAD*2 - SW*sc)/2;
-  const offY = PAD + (VH-PAD*2 - SH*sc)/2;
-  const px = (v,axis) => axis==='x' ? offX+v*sc : offY+v*sc;
-  const ps = v => v*sc;
-
+  const SW = dims.w, SH = dims.h;
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const sheetFill = isDark ? '#1a1d24' : '#dde0e8';
   const sheetStroke = isDark ? '#3a3e50' : '#b0b4c0';
   const textCol = isDark ? '#7a7d8a' : '#606472';
-  const textColHl = isDark ? '#c0c4d0' : '#1a1c24';
-
   const PALETTE = ['#4a9eff','#ff6b6b','#56c9a0','#ffd93d','#c77dff','#ff9a3c','#00d4aa','#ff6bcb'];
-
-  // Assign colors to unique part types
   const typeKey = p => `${p.w}x${p.h}`;
-  const types = [...new Set(parts.map(typeKey))];
+  const types = parts.length ? [...new Set(parts.map(typeKey))] : [];
   const colorOf = p => PALETTE[types.indexOf(typeKey(p)) % PALETTE.length];
+  const fmt = v => v >= 1000 ? (v/1000).toFixed(2).replace('.',',')+' м' : v+' мм';
 
-  let placed = [];
-  let gbW=0, gbH=0;
-  if (parts.length > 0) {
-    placed = packShelves(parts, SW, SH);
-    if (placed.length > 0) {
-      gbW = Math.max(...placed.map(p=>p.x+p.w));
-      gbH = Math.max(...placed.map(p=>p.y+p.h));
+  // Pack all parts across multiple sheets
+  const sheets = parts.length > 0 ? packMultiSheet(parts, SW, SH) : [[]];
+
+  // Deduplicate consecutive identical sheets
+  const sheetSig = pl => pl.map(p=>`${p.w}x${p.h}@${p.x},${p.y}`).sort().join('|');
+  const groups = [];
+  let sheetIdx = 1;
+  for (const placed of sheets) {
+    const sig = sheetSig(placed);
+    const last = groups[groups.length - 1];
+    if (last && last.sig === sig) {
+      last.count++;
+    } else {
+      groups.push({placed, sig, count: 1, startIdx: sheetIdx});
     }
+    sheetIdx++;
   }
 
-  // Update dims row
-  const dimsRow = document.getElementById('layout-dims-row');
-  dimsRow.innerHTML = `
-    <span class="layout-dim-pill">Лист: <b>${SW}×${SH} мм</b></span>
-    ${gbW ? `<span class="layout-dim-pill">Раскладка: <b>${gbW}×${gbH} мм</b></span>` : ''}
-    ${parts.length>0 ? `<span class="layout-dim-pill">Деталей: <b>${parts.reduce((s,p)=>s+p.n,0)} шт</b></span>` : ''}
-  `;
+  const N = groups.length;
 
-  let svgParts = '';
-  placed.forEach(p => {
-    const col = colorOf(p);
-    const x=offX+p.x*sc, y=offY+p.y*sc, w=ps(p.w), h=ps(p.h);
-    const fs = Math.max(6, Math.min(10, w/5, h/2));
-    const label = `${p.w}×${p.h}`;
-    svgParts += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${col}" fill-opacity="0.72" stroke="${col}" stroke-width="0.8" rx="1"/>`;
-    if (w > 28 && h > 16) {
-      svgParts += `<text x="${(x+w/2).toFixed(1)}" y="${(y+h/2).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="${fs}" fill="white" font-weight="600" font-family="Roboto,sans-serif">${label}</text>`;
+  // Scale: each sheet column ~160px wide, height up to 360px
+  const SHEET_COL_W = 160;
+  const LABEL_H = 18, PAD_TOP = 10, PAD_SIDE = 36, PAD_BOT = 22, SHEET_GAP = 14;
+  const sc = Math.min(SHEET_COL_W / SW, 360 / SH);
+  const shW = SW * sc, shH = SH * sc;
+
+  const totalSvgW = Math.ceil(PAD_SIDE + N * (shW + SHEET_GAP) - SHEET_GAP + PAD_SIDE);
+  const VH = Math.ceil(PAD_TOP + LABEL_H + shH + PAD_BOT);
+
+  let svgContent = '';
+
+  groups.forEach(({placed, count, startIdx}, gi) => {
+    const ox = PAD_SIDE + gi * (shW + SHEET_GAP);
+    const oy = PAD_TOP + LABEL_H;
+
+    let gbW = 0, gbH = 0;
+    if (placed.length > 0) {
+      gbW = Math.max(...placed.map(p => p.x + p.w));
+      gbH = Math.max(...placed.map(p => p.y + p.h));
+    }
+    const billW = gbW ? (gbW/SW > 0.6 ? SW : gbW) : 0;
+    const billH = gbH ? (gbH/SH > 0.6 ? SH : gbH) : 0;
+
+    // Sheet background
+    svgContent += `<rect x="${ox.toFixed(1)}" y="${oy.toFixed(1)}" width="${shW.toFixed(1)}" height="${shH.toFixed(1)}" fill="${sheetFill}" stroke="${sheetStroke}" stroke-width="1.2" rx="2"/>`;
+
+    // Billing rect (orange)
+    if (billW && billH) {
+      svgContent += `<rect x="${ox.toFixed(1)}" y="${oy.toFixed(1)}" width="${(billW*sc).toFixed(1)}" height="${(billH*sc).toFixed(1)}" fill="rgba(255,163,47,0.09)" stroke="#ffa32f" stroke-width="1.8" rx="2"/>`;
+    }
+
+    // Gabаrit (blue dashed)
+    if (gbW && gbH) {
+      svgContent += `<rect x="${ox.toFixed(1)}" y="${oy.toFixed(1)}" width="${(gbW*sc).toFixed(1)}" height="${(gbH*sc).toFixed(1)}" fill="rgba(74,158,255,0.05)" stroke="#4a9eff" stroke-width="1" stroke-dasharray="4,2" rx="2"/>`;
+    }
+
+    // Parts
+    placed.forEach(p => {
+      const col = colorOf(p);
+      const x = ox + p.x*sc, y = oy + p.y*sc, w = p.w*sc, h = p.h*sc;
+      const fs = Math.max(6, Math.min(10, w/5, h/2));
+      svgContent += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="${col}" fill-opacity="0.72" stroke="${col}" stroke-width="0.7" rx="1"/>`;
+      if (w > 28 && h > 14) svgContent += `<text x="${(x+w/2).toFixed(1)}" y="${(y+h/2).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="${fs}" fill="white" font-weight="600" font-family="Roboto,sans-serif">${p.w}×${p.h}</text>`;
+    });
+
+    if (placed.length === 0) {
+      svgContent += `<text x="${(ox+shW/2).toFixed(1)}" y="${(oy+shH/2).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="11" fill="${textCol}" font-family="Roboto,sans-serif">Укажите размеры деталей</text>`;
+    }
+
+    // Sheet label: "Лист N" or "Лист N–M ×K"
+    const label = count > 1
+      ? `Лист ${startIdx}–${startIdx+count-1}  ×${count}`
+      : `Лист ${startIdx}`;
+    svgContent += `<text x="${(ox+shW/2).toFixed(1)}" y="${(PAD_TOP+LABEL_H-4).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="600" fill="${textCol}" font-family="Roboto,sans-serif">${label}</text>`;
+
+    // Width label bottom
+    svgContent += `<text x="${(ox+shW/2).toFixed(1)}" y="${(oy+shH+14).toFixed(1)}" text-anchor="middle" font-size="9" fill="${textCol}" font-family="Roboto,sans-serif">${fmt(SW)}</text>`;
+
+    // Height label left (first group only)
+    if (gi === 0) {
+      svgContent += `<text x="${(ox-14).toFixed(1)}" y="${(oy+shH/2).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="${textCol}" font-family="Roboto,sans-serif" transform="rotate(-90,${(ox-14).toFixed(1)},${(oy+shH/2).toFixed(1)})">${fmt(SH)}</text>`;
     }
   });
 
-  // Gabаrit bounding box
-  let gbRect = '';
-  if (gbW && gbH) {
-    gbRect = `<rect x="${offX.toFixed(1)}" y="${offY.toFixed(1)}" width="${ps(gbW).toFixed(1)}" height="${ps(gbH).toFixed(1)}" fill="rgba(74,158,255,0.07)" stroke="#4a9eff" stroke-width="1.2" stroke-dasharray="5,3" rx="2"/>`;
-  }
-
-  // Dimension labels on sheet
-  const fmt = v => v >= 1000 ? (v/1000).toFixed(2).replace('.',',')+' м' : v+' мм';
-  const lblW = `<text x="${(offX+ps(SW)/2).toFixed(1)}" y="${(offY+ps(SH)+16).toFixed(1)}" text-anchor="middle" font-size="10" fill="${textCol}" font-family="Roboto,sans-serif">${fmt(SW)}</text>`;
-  const lblH = `<text x="${(offX-16).toFixed(1)}" y="${(offY+ps(SH)/2).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="10" fill="${textCol}" font-family="Roboto,sans-serif" transform="rotate(-90,${(offX-16).toFixed(1)},${(offY+ps(SH)/2).toFixed(1)})">${fmt(SH)}</text>`;
-
-  const noPartsNote = placed.length===0 ? `<text x="${(offX+ps(SW)/2).toFixed(1)}" y="${(offY+ps(SH)/2).toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-size="12" fill="${textCol}" font-family="Roboto,sans-serif">Укажите размеры деталей в запросе</text>` : '';
-
   const svg = document.getElementById('layout-svg');
-  svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
-  svg.innerHTML = `
-    <rect x="${offX.toFixed(1)}" y="${offY.toFixed(1)}" width="${ps(SW).toFixed(1)}" height="${ps(SH).toFixed(1)}" fill="${sheetFill}" stroke="${sheetStroke}" stroke-width="1.5" rx="2"/>
-    ${gbRect}
-    ${svgParts}
-    ${noPartsNote}
-    ${lblW}${lblH}
-  `;
+  svg.setAttribute('width', totalSvgW);
+  svg.setAttribute('height', VH);
+  svg.setAttribute('viewBox', `0 0 ${totalSvgW} ${VH}`);
+  svg.innerHTML = svgContent;
 
   // Legend
   const legend = document.getElementById('layout-legend');
   if (parts.length > 0) {
-    legend.innerHTML = types.map(t => {
-      const p = parts.find(p => typeKey(p)===t);
+    const partLegend = types.map(t => {
+      const p = parts.find(p => typeKey(p) === t);
       return `<div class="layout-legend-item"><div class="layout-legend-swatch" style="background:${colorOf(p)}"></div>${p.w}×${p.h} мм — ${p.n} шт</div>`;
     }).join('');
+    const s0 = groups[0]?.placed || [];
+    let gbW0=0, gbH0=0;
+    if (s0.length) { gbW0=Math.max(...s0.map(p=>p.x+p.w)); gbH0=Math.max(...s0.map(p=>p.y+p.h)); }
+    const bW = gbW0 ? (gbW0/SW>0.6?SW:gbW0) : 0;
+    const bH = gbH0 ? (gbH0/SH>0.6?SH:gbH0) : 0;
+    const billLegend = bW && bH ? `<div class="layout-legend-item"><div class="layout-legend-swatch-dash" style="background:#ffa32f"></div>Расчётный размер (правило 60%): ${bW}×${bH} мм</div>` : '';
+    const gbLegend = gbW0 && gbH0 ? `<div class="layout-legend-item" style="opacity:.65"><div class="layout-legend-swatch-dash" style="background:#4a9eff"></div>Габарит деталей: ${gbW0}×${gbH0} мм</div>` : '';
+    const sheetCount = sheets.length > 1 ? `<div class="layout-legend-item" style="font-weight:600;color:var(--text)">Листов итого: ${sheets.length} шт</div>` : '';
+    legend.innerHTML = partLegend + billLegend + gbLegend + sheetCount;
   } else {
     legend.innerHTML = '';
   }
@@ -1528,7 +1576,6 @@ async function submitRename() {
       <h3 id="layout-modal-title"></h3>
       <button class="layout-modal-close" onclick="closeLayoutModal()">✕</button>
     </div>
-    <div class="layout-dims-row" id="layout-dims-row"></div>
     <div class="layout-svg-wrap"><svg id="layout-svg" viewBox="0 0 660 420" xmlns="http://www.w3.org/2000/svg"></svg></div>
     <div class="layout-legend" id="layout-legend"></div>
   </div>
