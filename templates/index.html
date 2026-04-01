@@ -684,6 +684,7 @@ async function startNewCalc() {
   const r = await fetch('/api/calculation/new', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:currentUser})});
   const data = await r.json();
   currentCalcId = data.id;
+  currentMsgHistory = [];
   await loadCalcList();
   showView('chat');
   document.getElementById('messages').innerHTML = '';
