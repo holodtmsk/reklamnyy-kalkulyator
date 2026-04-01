@@ -324,6 +324,44 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 .info-example-text .hl{color:var(--green);font-weight:600;}
 .info-example-text .hl2{color:#7fc8ff;font-weight:600;}
 .info-note{background:rgba(200,16,46,0.06);border:1px solid rgba(200,16,46,0.15);border-radius:10px;padding:11px 14px;font-size:12.5px;color:var(--text2);line-height:1.6;display:flex;gap:9px;align-items:flex-start;margin-top:20px;}
+
+/* ── ADMIN PANEL ── */
+#admin-app{display:none;height:100vh;flex-direction:row;}
+.admin-badge{font-size:9px;letter-spacing:0.18em;color:var(--accent);text-transform:uppercase;font-weight:700;background:rgba(200,16,46,0.12);border:1px solid rgba(200,16,46,0.25);border-radius:4px;padding:2px 7px;display:inline-block;margin-bottom:10px;}
+.admin-main{flex:1;height:100vh;overflow-y:auto;background:var(--bg2);padding:28px 32px;transition:background .35s;}
+.admin-section-title{font-size:11px;font-weight:700;letter-spacing:0.16em;color:var(--text3);text-transform:uppercase;margin-bottom:20px;}
+.manager-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.manager-card{background:var(--surface);border-radius:16px;box-shadow:var(--nm-out);overflow:hidden;transition:background .35s,box-shadow .35s;}
+.manager-card-header{padding:16px 18px 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border-subtle);}
+.manager-avatar{width:38px;height:38px;background:linear-gradient(135deg,#c8102e,#8a0020);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;box-shadow:var(--nm-btn);flex-shrink:0;}
+.manager-name{font-family:'Roboto Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--text);letter-spacing:0.04em;}
+.manager-stats{padding:14px 18px;display:flex;gap:16px;}
+.stat-block{flex:1;background:var(--surface-deep);border-radius:10px;padding:10px 12px;box-shadow:var(--nm-in);}
+.stat-val{font-size:24px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;line-height:1;}
+.stat-label{font-size:10px;color:var(--text3);margin-top:3px;letter-spacing:0.08em;text-transform:uppercase;}
+.manager-card-footer{padding:0 18px 14px;display:flex;gap:8px;}
+.btn-del-all{flex:1;padding:8px 12px;background:rgba(255,68,85,0.08);border:1px solid rgba(255,68,85,0.2);border-radius:9px;color:#ff6070;font-family:'Roboto',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;}
+.btn-del-all:hover{background:rgba(255,68,85,0.15);border-color:rgba(255,68,85,0.4);}
+.btn-show-log{padding:8px 12px;background:var(--surface-deep);border:none;border-radius:9px;color:var(--text2);font-family:'Roboto',sans-serif;font-size:11px;cursor:pointer;box-shadow:var(--nm-btn);transition:all .15s;}
+.btn-show-log:hover{color:var(--text);}
+.manager-log{display:none;border-top:1px solid var(--border-subtle);max-height:220px;overflow-y:auto;}
+.manager-log.open{display:block;}
+.manager-log::-webkit-scrollbar{width:3px;}
+.manager-log::-webkit-scrollbar-thumb{background:var(--border-subtle);border-radius:2px;}
+.log-entry{padding:7px 18px;display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--border-subtle);font-size:12px;}
+.log-entry:last-child{border-bottom:none;}
+.log-time{color:var(--text3);font-size:10px;white-space:nowrap;flex-shrink:0;}
+.log-action{color:var(--text2);flex:1;}
+.log-action.login{color:var(--green);}
+.log-action.logout,.log-action.inactivity_logout{color:var(--text3);}
+.log-action.delete_calculation{color:#ff6070;}
+.log-action.pricelist_upload,.log-action.pricelist_edit_save{color:#7fc8ff;}
+.log-empty{padding:16px 18px;color:var(--text3);font-size:12px;text-align:center;}
+/* Admin pw modal */
+.adm-pw-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.adm-pw-overlay.open{display:flex;}
+.adm-pw-card{background:var(--surface);border-radius:16px;padding:28px 32px;width:320px;box-shadow:var(--nm-out-lg);position:relative;}
+.adm-pw-card::before{content:'';position:absolute;top:0;left:25%;right:25%;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);border-radius:0 0 2px 2px;}
 </style>
 </head>
 <body>
@@ -448,6 +486,71 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
   </div>
 </div>
 
+<!-- ADMIN APP -->
+<div id="admin-app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">ПРО<span class="logo-bar"></span>ДВИЖЕНИЕ</div>
+      <div class="sidebar-logo-sub">ИИ-Технолог</div>
+      <div class="sidebar-user">
+        <div class="user-avatar" style="font-size:9px;background:linear-gradient(135deg,#555,#222)">АДМ</div>
+        <div class="sidebar-theme-toggle">
+          <span class="toggle-icon-sm">🌙</span>
+          <div class="toggle-track-sm" onclick="toggleTheme()"></div>
+          <span class="toggle-icon-sm">☀️</span>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-section" style="flex:none;padding-top:12px;">
+      <div class="admin-badge">Администратор</div>
+      <div class="sidebar-section-title">Управление прайсом</div>
+      <button class="btn-pricelist" onclick="adminDownloadPricelist()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Скачать прайс (Excel)
+      </button>
+      <button class="btn-pricelist" onclick="adminUploadPricelist()" style="margin-top:4px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Загрузить прайс
+      </button>
+      <button class="btn-pricelist" onclick="adminViewPricelist()" style="margin-top:4px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Просмотреть прайс
+      </button>
+      <button class="btn-pricelist" onclick="adminEditPricelist()" style="margin-top:4px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Редактировать прайс
+      </button>
+      <div class="pricelist-status" style="margin-top:8px;">
+        <div class="status-dot" id="admin-price-dot"></div>
+        <span id="admin-price-status-text">Прайс не загружен</span>
+      </div>
+    </div>
+    <div style="flex:1;"></div>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="adminLogout()">Выйти из системы</button>
+    </div>
+  </div>
+  <div class="admin-main">
+    <div class="admin-section-title">Статистика менеджеров</div>
+    <div class="manager-grid" id="manager-grid"></div>
+  </div>
+</div>
+
+<!-- Admin Password Modal -->
+<div class="adm-pw-overlay" id="adm-pw-overlay">
+  <div class="adm-pw-card">
+    <div class="pe-pw-title">Администратор</div>
+    <div class="pe-pw-sub" style="font-size:12px;color:var(--text2);margin-bottom:18px;">Введите пароль для доступа</div>
+    <input class="pe-pw-input" id="adm-pw-input" type="password" placeholder="••••••••" maxlength="20"
+           onkeydown="if(event.key==='Enter')verifyAdminPw();if(event.key==='Escape')closeAdminPwModal();">
+    <div class="pe-pw-err" id="adm-pw-err"></div>
+    <div class="pe-pw-btns">
+      <button class="btn-nm" onclick="closeAdminPwModal()">Отмена</button>
+      <button class="btn-nm btn-nm-accent" onclick="verifyAdminPw()">Войти</button>
+    </div>
+  </div>
+</div>
+
 <!-- Upload Modal -->
 <div class="modal-overlay" id="pricelist-modal">
   <div class="modal">
@@ -492,6 +595,10 @@ async function doLogin() {
   const val = document.getElementById('login-input').value.trim().toLowerCase();
   const err = document.getElementById('login-error');
   err.textContent = '';
+  if (val === 'adm') {
+    showAdminPwModal();
+    return;
+  }
   try {
     const r = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({user_id:val})});
     const data = await r.json();
@@ -509,13 +616,17 @@ function showApp() {
   // user-display hidden
   loadCalcList();
   checkPricelistStatus();
+  startInactivityWatch();
 }
 
-function logout() {
+async function logout() {
+  if (currentUser) {
+    stopInactivityWatch();
+    try { await fetch('/api/logout', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id: currentUser, reason: 'manual'})}); } catch(e){}
+  }
   currentUser=null; currentCalcId=null;
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
-
   document.getElementById('login-input').value = '';
 }
 
@@ -715,6 +826,12 @@ async function _openPriceView() {
 
 function closePriceEditor() {
   priceViewOnly = false;
+  if (isAdmin) {
+    document.getElementById('price-editor-view').style.display = 'none';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('admin-app').style.display = 'flex';
+    return;
+  }
   showView(currentCalcId ? 'chat' : 'welcome');
 }
 
@@ -850,6 +967,9 @@ async function peSave() {
     const r = await fetch('/api/pricelist-save', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content})});
     const d = await r.json();
     if (d.ok) {
+      if (currentUser) {
+        fetch('/api/log-action', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id: currentUser, action: 'pricelist_edit_save'})}).catch(()=>{});
+      }
       checkPricelistStatus();
       const btn = document.querySelector('.btn-nm-accent');
       const orig = btn.textContent; btn.textContent = '\u2713 Сохранено';
@@ -902,6 +1022,9 @@ function pePrint() {
 
 async function downloadPricelistExcel() {
   let data;
+  if (currentUser) {
+    fetch('/api/log-action', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id: currentUser, action: 'pricelist_download'})}).catch(()=>{});
+  }
   try {
     const r = await fetch('/api/pricelist-content');
     const d = await r.json();
@@ -975,6 +1098,9 @@ async function uploadFile(file) {
   try {
     const r=await fetch('/api/upload-pricelist',{method:'POST',body:formData}); const data=await r.json();
     fb.textContent=`✓ Загружено: ${data.chars} символов`; ut.textContent=file.name; checkPricelistStatus();
+    if (currentUser) {
+      fetch('/api/log-action', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id: currentUser, action: 'pricelist_upload', details: file.name})}).catch(()=>{});
+    }
   } catch(e) { fb.textContent='✗ Ошибка загрузки'; ut.textContent='Нажмите или перетащите файл'; }
 }
 
@@ -1150,6 +1276,190 @@ async function submitRename() {
       }
     }
   } catch(e) { alert('Ошибка: ' + e.message); }
+}
+</script>
+
+<script>
+// ── INACTIVITY WATCH ──────────────────────────────────────────────────────────
+let lastActivityTime = Date.now();
+let inactivityTimer = null;
+function resetActivityTimer() { lastActivityTime = Date.now(); }
+function startInactivityWatch() {
+  lastActivityTime = Date.now();
+  ['mousemove','keydown','click','touchstart'].forEach(e => document.addEventListener(e, resetActivityTimer, {passive:true}));
+  inactivityTimer = setInterval(() => {
+    if (Date.now() - lastActivityTime > 60 * 60 * 1000) logoutInactive();
+  }, 60000);
+}
+function stopInactivityWatch() {
+  if (inactivityTimer) { clearInterval(inactivityTimer); inactivityTimer = null; }
+  ['mousemove','keydown','click','touchstart'].forEach(e => document.removeEventListener(e, resetActivityTimer));
+}
+async function logoutInactive() {
+  stopInactivityWatch();
+  const uid = currentUser;
+  if (uid) {
+    try { await fetch('/api/logout', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id: uid, reason: 'inactivity'})}); } catch(e){}
+  }
+  logout();
+}
+
+// ── ADMIN ─────────────────────────────────────────────────────────────────────
+let isAdmin = false;
+
+function showAdminPwModal() {
+  document.getElementById('adm-pw-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('adm-pw-input').focus(), 50);
+}
+function closeAdminPwModal() {
+  document.getElementById('adm-pw-overlay').classList.remove('open');
+  document.getElementById('adm-pw-input').value = '';
+  document.getElementById('adm-pw-err').textContent = '';
+  document.getElementById('login-input').value = '';
+}
+async function verifyAdminPw() {
+  const pw = document.getElementById('adm-pw-input').value;
+  try {
+    const r = await fetch('/api/admin/verify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({password: pw})});
+    if (r.ok) {
+      closeAdminPwModal();
+      showAdminApp();
+    } else {
+      document.getElementById('adm-pw-err').textContent = 'Неверный пароль';
+      document.getElementById('adm-pw-input').value = '';
+      document.getElementById('adm-pw-input').focus();
+    }
+  } catch(e) {
+    document.getElementById('adm-pw-err').textContent = 'Ошибка подключения';
+  }
+}
+
+function showAdminApp() {
+  isAdmin = true;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('admin-app').style.display = 'flex';
+  adminCheckPricelistStatus();
+  loadManagerStats();
+}
+
+function adminLogout() {
+  isAdmin = false;
+  document.getElementById('admin-app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-input').value = '';
+}
+
+async function adminCheckPricelistStatus() {
+  try {
+    const r = await fetch('/api/pricelist-status');
+    const data = await r.json();
+    const dot = document.getElementById('admin-price-dot');
+    const txt = document.getElementById('admin-price-status-text');
+    if (data.loaded) { dot.classList.add('ok'); txt.textContent = `Прайс загружен (${Math.round(data.size/1024)} KB)`; }
+    else { dot.classList.remove('ok'); txt.textContent = 'Прайс не загружен'; }
+  } catch(e){}
+}
+
+function adminDownloadPricelist() { downloadPricelistExcel(); }
+function adminUploadPricelist() { openPricelistModal(); }
+function adminViewPricelist() {
+  document.getElementById('admin-app').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  priceViewOnly = true;
+  _openPriceView();
+}
+function adminEditPricelist() {
+  document.getElementById('admin-app').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  priceViewOnly = false;
+  _openPriceView();
+}
+
+async function loadManagerStats() {
+  try {
+    const r = await fetch('/api/admin/stats');
+    const stats = await r.json();
+    const grid = document.getElementById('manager-grid');
+    grid.innerHTML = '';
+    for (const [uid, s] of Object.entries(stats)) {
+      const card = document.createElement('div');
+      card.className = 'manager-card';
+      card.id = 'mcard-' + uid;
+      card.innerHTML = `
+        <div class="manager-card-header">
+          <div class="manager-avatar">${uid.slice(-2).toUpperCase()}</div>
+          <div>
+            <div class="manager-name">${uid.toUpperCase()}</div>
+          </div>
+        </div>
+        <div class="manager-stats">
+          <div class="stat-block">
+            <div class="stat-val">${s.open}</div>
+            <div class="stat-label">Открыто расчётов</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-val">${s.month}</div>
+            <div class="stat-label">За этот месяц</div>
+          </div>
+        </div>
+        <div class="manager-card-footer">
+          <button class="btn-del-all" onclick="adminDeleteAllCalcs('${uid}')">Удалить все расчёты</button>
+          <button class="btn-show-log" onclick="toggleManagerLog('${uid}')">Лог</button>
+        </div>
+        <div class="manager-log" id="mlog-${uid}">
+          <div class="log-empty">Загрузка...</div>
+        </div>`;
+      grid.appendChild(card);
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function adminDeleteAllCalcs(uid) {
+  if (!confirm(`Удалить все расчёты ${uid.toUpperCase()}? Это действие нельзя отменить.`)) return;
+  try {
+    await fetch(`/api/admin/manager/${uid}/calculations`, {method:'DELETE'});
+    await loadManagerStats();
+  } catch(e) { alert('Ошибка: ' + e.message); }
+}
+
+const ACTION_LABELS = {
+  login: 'Вошёл в систему',
+  logout: 'Вышел из системы',
+  inactivity_logout: 'Выход (неактивен > 1 ч)',
+  new_calculation: 'Создал новый расчёт',
+  delete_calculation: 'Удалил расчёт',
+  pricelist_upload: 'Загрузил прайс',
+  pricelist_edit_save: 'Сохранил изменения в прайсе',
+  pricelist_download: 'Скачал прайс (Excel)',
+  pricelist_view: 'Открыл просмотр прайса',
+};
+
+async function toggleManagerLog(uid) {
+  const logEl = document.getElementById('mlog-' + uid);
+  if (logEl.classList.contains('open')) {
+    logEl.classList.remove('open');
+    return;
+  }
+  logEl.classList.add('open');
+  logEl.innerHTML = '<div class="log-empty">Загрузка...</div>';
+  try {
+    const r = await fetch(`/api/admin/logs/${uid}`);
+    const logs = await r.json();
+    if (logs.length === 0) {
+      logEl.innerHTML = '<div class="log-empty">Активности нет</div>';
+      return;
+    }
+    logEl.innerHTML = logs.map(e => {
+      const label = ACTION_LABELS[e.action] || e.action;
+      const detail = e.details ? ` — ${escHtml(e.details)}` : '';
+      const dt = new Date(e.created_at + 'Z');
+      const timeStr = dt.toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'}) + ' ' + dt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+      return `<div class="log-entry"><span class="log-time">${timeStr}</span><span class="log-action ${e.action}">${label}${detail}</span></div>`;
+    }).join('');
+  } catch(e) {
+    logEl.innerHTML = '<div class="log-empty">Ошибка загрузки</div>';
+  }
 }
 </script>
 

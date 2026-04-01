@@ -33,10 +33,26 @@ def init_db():
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
     )""")
+    c.execute("""CREATE TABLE IF NOT EXISTS activity_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        action TEXT NOT NULL,
+        details TEXT DEFAULT '',
+        created_at TEXT NOT NULL
+    )""")
     conn.commit()
     conn.close()
 
 init_db()
+
+def log_action(user_id: str, action: str, details: str = ''):
+    now = datetime.utcnow().isoformat()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("INSERT INTO activity_log (user_id, action, details, created_at) VALUES (?,?,?,?)",
+              (user_id, action, details, now))
+    conn.commit()
+    conn.close()
 
 def get_system_prompt():
     import os as _os
@@ -113,6 +129,7 @@ class LoginRequest(BaseModel):
 async def login(req: LoginRequest):
     if req.user_id not in VALID_USERS:
         raise HTTPException(status_code=401, detail="Неверный логин")
+    log_action(req.user_id, 'login')
     return {"ok": True, "user_id": req.user_id}
 
 
@@ -152,6 +169,7 @@ async def new_calculation(req: NewCalcRequest):
     calc_id = c.lastrowid
     conn.commit()
     conn.close()
+    log_action(req.user_id, 'new_calculation')
     return {"id": calc_id}
 
 
@@ -159,6 +177,10 @@ async def new_calculation(req: NewCalcRequest):
 async def delete_calculation(calc_id: int):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+    c.execute("SELECT user_id, title FROM calculations WHERE id=?", (calc_id,))
+    row_info = c.fetchone()
+    if row_info:
+        log_action(row_info[0], 'delete_calculation', (row_info[1] or '')[:60])
     c.execute("DELETE FROM calculations WHERE id=?", (calc_id,))
     conn.commit()
     conn.close()
@@ -348,3 +370,74 @@ async def pricelist_save(request: Request):
     with open(PRICE_LIST_PATH, "w", encoding="utf-8") as f:
         f.write(content)
     return {"ok": True, "chars": len(content)}
+
+
+ADMIN_PASSWORD = "361961361"
+
+class AdminVerifyRequest(BaseModel):
+    password: str
+
+@app.post("/api/admin/verify")
+async def admin_verify(req: AdminVerifyRequest):
+    if req.password == ADMIN_PASSWORD:
+        return {"ok": True}
+    raise HTTPException(status_code=401, detail="Неверный пароль")
+
+@app.get("/api/admin/stats")
+async def admin_stats():
+    now = datetime.utcnow()
+    month_start = datetime(now.year, now.month, 1).isoformat()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    result = {}
+    for user_id in VALID_USERS:
+        c.execute("SELECT COUNT(*) FROM calculations WHERE user_id=?", (user_id,))
+        open_count = c.fetchone()[0]
+        c.execute("SELECT COUNT(*) FROM calculations WHERE user_id=? AND created_at>=?", (user_id, month_start))
+        month_count = c.fetchone()[0]
+        result[user_id] = {"open": open_count, "month": month_count}
+    conn.close()
+    return result
+
+@app.delete("/api/admin/manager/{user_id}/calculations")
+async def admin_delete_manager_calcs(user_id: str):
+    if user_id not in VALID_USERS:
+        raise HTTPException(status_code=404, detail="User not found")
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("DELETE FROM calculations WHERE user_id=?", (user_id,))
+    conn.commit()
+    conn.close()
+    return {"ok": True}
+
+@app.get("/api/admin/logs/{user_id}")
+async def admin_get_logs(user_id: str):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT action, details, created_at FROM activity_log WHERE user_id=? ORDER BY created_at DESC LIMIT 100", (user_id,))
+    rows = c.fetchall()
+    conn.close()
+    return [{"action": r[0], "details": r[1] or '', "created_at": r[2]} for r in rows]
+
+class LogoutRequest(BaseModel):
+    user_id: str
+    reason: str = "manual"
+
+@app.post("/api/logout")
+async def user_logout(req: LogoutRequest):
+    if req.user_id in VALID_USERS:
+        action = 'inactivity_logout' if req.reason == 'inactivity' else 'logout'
+        log_action(req.user_id, action)
+    return {"ok": True}
+
+class FrontendLogRequest(BaseModel):
+    user_id: str
+    action: str
+    details: str = ''
+
+@app.post("/api/log-action")
+async def frontend_log(req: FrontendLogRequest):
+    ALLOWED = {'pricelist_download', 'pricelist_view', 'pricelist_edit_save', 'pricelist_upload'}
+    if req.user_id in VALID_USERS and req.action in ALLOWED:
+        log_action(req.user_id, req.action, req.details)
+    return {"ok": True}
