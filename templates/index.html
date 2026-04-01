@@ -1185,8 +1185,9 @@ function injectLayoutButtons(msgEl, userText) {
   tables.forEach(table => {
     const ths = Array.from(table.querySelectorAll('th')).map(th => th.textContent.trim().toLowerCase());
     const unitIdx = ths.findIndex(h => h.includes('ед') || h.includes('unit'));
-    const nameIdx = ths.findIndex(h => h.includes('наим') || h.includes('name') || h === '');
-    if (unitIdx === -1) return;
+    // Only process the МАТЕРИАЛЫ table — must have explicit "Наименование" column
+    const nameIdx = ths.findIndex(h => h.includes('наим'));
+    if (unitIdx === -1 || nameIdx === -1) return;
     const rows = table.querySelectorAll('tbody tr');
     rows.forEach(row => {
       const cells = Array.from(row.querySelectorAll('td'));
@@ -1214,8 +1215,9 @@ function getSheetDims(matName) {
       if (!item.width_mm || !item.height_mm) continue;
       const b = norm(item.name);
       // fuzzy: all significant words from the shorter string appear in the longer
-      const wa = a.split(' ').filter(w=>w.length>1);
-      const wb = b.split(' ').filter(w=>w.length>1);
+      const wa = a.split(' ').filter(w=>w.length>2);
+      const wb = b.split(' ').filter(w=>w.length>2);
+      if (!wa.length || !wb.length) continue; // guard vacuous truth
       const shorter = wa.length <= wb.length ? wa : wb;
       const longer  = wa.length <= wb.length ? wb : wa;
       if (shorter.every(w => longer.some(lw => lw.includes(w) || w.includes(lw)))) {
@@ -1305,11 +1307,66 @@ function packMultiSheet(parts, maxW, maxH) {
   return sheets.length > 0 ? sheets : [[]];
 }
 
+// Extract only the parts that belong to a specific material based on text proximity
+function parsePartsForMaterial(userText, matName) {
+  const normStr = s => s.toLowerCase().replace(/[^а-яёa-z0-9]/g,' ').replace(/\s+/g,' ').trim();
+
+  // Keywords unique enough to identify this material (≥3 chars)
+  const matWords = normStr(matName).split(' ').filter(w => w.length >= 3);
+
+  // All known sheet-material keywords to detect "other" materials in text
+  const sheetKeywords = ['пвх','акрил','оргстекл','акп','композит','алюминий','нержавейк','алюнатур','пэт','полистирол','фанер','оцинков'];
+  const textLow = userText.toLowerCase();
+
+  // How many distinct sheet materials appear in the text?
+  const foundMats = sheetKeywords.filter(k => textLow.includes(k));
+  // ≤1 material mentioned — no need to separate, return everything
+  if (foundMats.length <= 1) return parsePartsFromText(userText);
+
+  // Find all positions where THIS material is mentioned
+  if (!matWords.length) return parsePartsFromText(userText);
+  const matRegex = new RegExp(matWords.join('|'), 'gi');
+  const matPositions = [];
+  let mm;
+  while ((mm = matRegex.exec(userText)) !== null) matPositions.push(mm.index);
+  if (!matPositions.length) return parsePartsFromText(userText);
+
+  // Find all positions of OTHER materials
+  const otherWords = sheetKeywords.filter(k => !matWords.some(mw => k.includes(mw) || mw.includes(k)));
+  const otherRegex = new RegExp(otherWords.join('|'), 'gi');
+  const otherPositions = [];
+  while ((mm = otherRegex.exec(userText)) !== null) otherPositions.push(mm.index);
+
+  // For each mention of THIS material, compute the "ownership zone":
+  // from the midpoint to the previous other-material to the midpoint to the next other-material
+  const zones = matPositions.map(mp => {
+    // nearest other-mat to the left
+    const leftOther = otherPositions.filter(p => p < mp);
+    const rightOther = otherPositions.filter(p => p > mp);
+    const left  = leftOther.length  ? Math.floor((mp + leftOther[leftOther.length-1]) / 2)  : 0;
+    const right = rightOther.length ? Math.ceil((mp + rightOther[0]) / 2) : userText.length;
+    return {left, right};
+  });
+
+  // Merge overlapping zones and extract text chunks
+  zones.sort((a,b) => a.left - b.left);
+  const merged = [];
+  for (const z of zones) {
+    const last = merged[merged.length-1];
+    if (last && z.left <= last.right) last.right = Math.max(last.right, z.right);
+    else merged.push({...z});
+  }
+
+  const chunks = merged.map(z => userText.slice(z.left, z.right)).join(' … ');
+  const result = parsePartsFromText(chunks);
+  // Fallback: if nothing found in zones, return everything (avoids blank layout)
+  return result.length > 0 ? result : parsePartsFromText(userText);
+}
+
 function openLayoutModal(matName, dims, userText) {
-  // Also fetch pricelist if peData empty
   const run = () => {
     document.getElementById('layout-modal-title').textContent = matName;
-    const parts = parsePartsFromText(userText);
+    const parts = parsePartsForMaterial(userText, matName);
     renderLayoutSVG(matName, dims, parts);
     document.getElementById('layout-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
