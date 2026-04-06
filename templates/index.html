@@ -197,8 +197,8 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 .calc-export-btn::before{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,var(--highlight),transparent);border-radius:10px 10px 0 0;pointer-events:none;}
 .calc-export-btn:hover{box-shadow:var(--nm-btn),0 0 14px rgba(200,16,46,0.2);color:var(--accent);transform:translateY(-1px);}
 .calc-export-btn:active{box-shadow:var(--nm-btn-pressed);transform:translateY(0);}
-.fot-toggle-btn{display:inline-flex;align-items:center;gap:6px;margin:6px 0 4px;padding:5px 12px;background:var(--surface-deep);border:none;border-radius:8px;color:var(--text2);font-size:11px;font-weight:600;font-family:'Roboto',sans-serif;letter-spacing:0.05em;cursor:pointer;box-shadow:var(--nm-btn);transition:color .15s;}
-.fot-toggle-btn:hover{color:var(--text);}
+.fot-toggle-btn{display:inline-block;margin:4px 0 8px;padding:0;background:none;border:none;color:var(--text3);font-size:12px;font-family:'Roboto',sans-serif;cursor:pointer;transition:color .15s;}
+.fot-toggle-btn:hover{color:var(--text2);}
 .fot-table-hidden{display:none;}
 .calc-layout-btn{display:inline-flex;align-items:center;gap:4px;margin-left:8px;padding:2px 8px;background:rgba(74,158,255,0.08);border:1px solid rgba(74,158,255,0.35);border-radius:4px;color:#4a9eff;font-size:11px;font-weight:500;font-family:'Roboto',sans-serif;cursor:pointer;vertical-align:middle;transition:background .15s;}
 .calc-layout-btn:hover{background:rgba(74,158,255,0.18);}
@@ -1183,24 +1183,25 @@ async function loadExcelPricelist(event) {
 function collapseFOT(msgEl) {
   const bubble = msgEl.querySelector('.msg-bubble');
   if (!bubble) return;
-  bubble.querySelectorAll('h1,h2,h3,h4').forEach(h => {
-    if (!h.textContent.includes('ФОТ')) return;
-    // Find the table immediately following the heading
-    let tbl = h.nextElementSibling;
+  // Search all block elements — AI may render ФОТ header as h2, h3, or p>strong
+  const candidates = Array.from(bubble.querySelectorAll('h1,h2,h3,h4,p'));
+  for (const el of candidates) {
+    if (!el.textContent.includes('ФОТ')) continue;
+    // Find next TABLE sibling (skip non-table siblings)
+    let tbl = el.nextElementSibling;
     while (tbl && tbl.tagName !== 'TABLE') tbl = tbl.nextElementSibling;
-    if (!tbl) return;
+    if (!tbl) continue;
     tbl.classList.add('fot-table-hidden');
     const btn = document.createElement('button');
     btn.className = 'fot-toggle-btn';
-    btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg> Показать операции ФОТ';
+    btn.textContent = '(+) Детализировать операции ФОТ';
     btn.addEventListener('click', () => {
       const hidden = tbl.classList.toggle('fot-table-hidden');
-      btn.innerHTML = hidden
-        ? '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg> Показать операции ФОТ'
-        : '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg> Скрыть операции ФОТ';
+      btn.textContent = hidden ? '(+) Детализировать операции ФОТ' : '(−) Свернуть операции ФОТ';
     });
-    h.insertAdjacentElement('afterend', btn);
-  });
+    el.insertAdjacentElement('afterend', btn);
+    break; // only first ФОТ block
+  }
 }
 
 function renderMarkdown(text) { if (typeof marked!=='undefined') return marked.parse(text); return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
