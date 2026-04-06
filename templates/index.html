@@ -1333,20 +1333,20 @@ function parsePartsFromText(text) {
 
   // Pattern: N×W×H  e.g. "5×600×300" or "1 x 600 x 300"
   // Only when first number is plausible qty (≤ 200) to avoid matching "700×290×20" (3D depth)
-  const re1 = /(\d{1,3})\s*[×xхXх]\s*(\d{2,5})\s*[×xхXх]\s*(\d{2,5})/g;
+  const re1 = /(\d{1,3})[^\d\n]+(\d{2,5})[^\d\n]+(\d{2,5})/g;
   let m;
   while ((m = re1.exec(text)) !== null) { if (parseInt(m[1])<=200) add(m[2], m[3], m[1]); }
 
   // Pattern: W×H with preceding qty  e.g. "5 шт 600×300" or "4шт. 225×305"
-  const re2 = /(\d+)\s*(?:шт\.?|штук\.?)?\s+(\d{3,5})\s*[×xхXх]\s*(\d{3,5})/g;
+  const re2 = /(\d+)\s*(?:шт\.?|штук\.?)?\s+(\d{3,5})[^\d\n]+(\d{3,5})/g;
   while ((m = re2.exec(text)) !== null) add(m[2], m[3], m[1]);
 
   // Pattern: W×H followed by qty  e.g. "600×300 мм, 5 шт"
-  const re3 = /(\d{3,5})\s*[×xхXх]\s*(\d{3,5})\s*(?:мм)?\s*[,\-–]?\s*(\d+)\s*шт/g;
+  const re3 = /(\d{3,5})[^\d\n]+(\d{3,5})\s*(?:мм)?\s*[,\-–]?\s*(\d+)\s*шт/g;
   while ((m = re3.exec(text)) !== null) add(m[1], m[2], m[3]);
 
   // Pattern: lone W×H (qty=1)
-  const re4 = /(\d{3,5})\s*[×xхXх]\s*(\d{3,5})/g;
+  const re4 = /(\d{3,5})[^\d\n]+(\d{3,5})/g;
   while ((m = re4.exec(text)) !== null) {
     const w = parseInt(m[1]), h = parseInt(m[2]);
     if (!parts.some(p => p.w===w && p.h===h)) add(w, h, 1);
