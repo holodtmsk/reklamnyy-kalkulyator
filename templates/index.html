@@ -1122,34 +1122,44 @@ async function exportToPDF(btn) {
   const origHTML = btn.innerHTML;
   btn.innerHTML = 'Генерирую…';
   btn.disabled = true;
+  const exportGroup = btn.closest('.calc-export-group');
   try {
-    // Temporarily hide export group so it doesn't appear in screenshot
-    const exportGroup = btn.closest('.calc-export-group');
     if (exportGroup) exportGroup.style.display = 'none';
 
     const canvas = await html2canvas(bubble, {
       scale: 2,
       useCORS: true,
-      backgroundColor: getComputedStyle(bubble).backgroundColor || '#1c2028',
+      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--surface-msg-ai').trim() || '#1c2028',
       logging: false
     });
 
     if (exportGroup) exportGroup.style.display = '';
 
-    const imgW = canvas.width;
-    const imgH = canvas.height;
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
     const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    // A4 dimensions in px at 96dpi: 794×1123. We fit to page width.
-    const pdfW = 794;
-    const pdfH = Math.round(imgH * pdfW / imgW);
-    const pdf = new jsPDF({ unit: 'px', format: [pdfW, pdfH + 40], orientation: pdfH > pdfW ? 'portrait' : 'landscape' });
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 20, 20, pdfW - 40, pdfH);
+    const pageW = pdf.internal.pageSize.getWidth();   // 210 mm
+    const pageH = pdf.internal.pageSize.getHeight();  // 297 mm
+    const margin = 12;
+    const availW = pageW - margin * 2;
+    const imgRatio = canvas.height / canvas.width;
+    const totalImgH = availW * imgRatio;               // full image height in mm
+    const sliceH = pageH - margin * 2;                 // printable area per page
+
+    let yOffset = 0; // how many mm into the image we've already printed
+    while (yOffset < totalImgH) {
+      // position the image so current slice aligns at top margin
+      pdf.addImage(imgData, 'JPEG', margin, margin - yOffset, availW, totalImgH);
+      // clip to page bounds (addImage doesn't auto-clip, but browser print does;
+      // with jsPDF we need multiple pages manually)
+      yOffset += sliceH;
+      if (yOffset < totalImgH) pdf.addPage();
+    }
 
     const title = document.getElementById('chat-title').textContent || 'kalkulyaciya';
     pdf.save(title.substring(0, 30).replace(/[^\w\u0400-\u04FF]/g, '_') + '.pdf');
   } catch(e) {
-    const exportGroup = btn.closest('.calc-export-group');
     if (exportGroup) exportGroup.style.display = '';
     alert('Ошибка: ' + e.message);
   } finally {
