@@ -79,6 +79,11 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
 .btn-login:hover{box-shadow:var(--nm-btn),0 0 28px rgba(200,16,46,0.4);}
 .btn-login:active{box-shadow:var(--nm-btn-pressed);transform:scale(0.99);}
 .login-error{margin-top:12px;font-size:12px;color:#ff4455;text-align:center;min-height:18px;}
+.login-quick-label{font-size:10px;font-weight:500;letter-spacing:0.12em;color:var(--text3);text-transform:uppercase;text-align:center;margin:18px 0 10px;}
+.login-quick-btns{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-bottom:20px;}
+.btn-quick{padding:8px 12px;background:var(--surface-deep);border:1px solid var(--border-subtle);border-radius:10px;color:var(--text2);font-family:'Roboto Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;box-shadow:var(--nm-btn);transition:all .15s;}
+.btn-quick:hover{color:var(--text);box-shadow:var(--nm-out);border-color:rgba(200,16,46,0.3);}
+.btn-quick:active{box-shadow:var(--nm-btn-pressed);transform:scale(0.97);}
 
 /* ── APP ── */
 #app{display:none;height:100vh;flex-direction:row;}
@@ -413,7 +418,17 @@ body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);heig
     <div class="login-input-wrap">
       <input class="login-input" id="login-input" type="text" placeholder="sbt01" maxlength="5" autocomplete="off" spellcheck="false">
     </div>
-    <div class="login-hint">Доступны логины: sbt01 — sbt05</div>
+    <div class="login-hint">Или выберите аккаунт быстрым входом ↓</div>
+    <div class="login-quick-label">Быстрый вход</div>
+    <div class="login-quick-btns">
+      <button class="btn-quick" onclick="quickLogin('sbt01')">sbt01</button>
+      <button class="btn-quick" onclick="quickLogin('sbt02')">sbt02</button>
+      <button class="btn-quick" onclick="quickLogin('sbt03')">sbt03</button>
+      <button class="btn-quick" onclick="quickLogin('sbt04')">sbt04</button>
+      <button class="btn-quick" onclick="quickLogin('sbt05')">sbt05</button>
+      <button class="btn-quick" onclick="quickLogin('sbt06')">sbt06</button>
+      <button class="btn-quick" onclick="quickLogin('sbt07')">sbt07</button>
+    </div>
     <button class="btn-login" onclick="doLogin()">Войти в систему</button>
     <div class="login-error" id="login-error"></div>
   </div>
@@ -620,6 +635,11 @@ function toggleTheme() {
 
 // ── LOGIN ─────────────────────────────────────────────────────────────────────
 document.getElementById('login-input').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+
+function quickLogin(id) {
+  document.getElementById('login-input').value = id;
+  doLogin();
+}
 
 async function doLogin() {
   const val = document.getElementById('login-input').value.trim().toLowerCase();
