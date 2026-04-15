@@ -1972,7 +1972,7 @@ async function adminClearLogs(uid) {
 </script>
 
 <!-- ── PIXEL TECHNOLOGIST ─────────────────────────────────────────────────── -->
-<canvas id="pixel-guy" width="32" height="48" style="position:fixed;bottom:70px;right:20px;z-index:50;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer;pointer-events:auto;"></canvas>
+<canvas id="pixel-guy" width="32" height="48" style="position:fixed;top:0;left:0;z-index:50;image-rendering:pixelated;image-rendering:crisp-edges;cursor:pointer;pointer-events:auto;"></canvas>
 <script>
 (function(){
   const C = document.getElementById('pixel-guy');
@@ -2099,72 +2099,40 @@ async function adminClearLogs(uid) {
     ],
   ];
 
-  // ── Smoke particles ──
-  const smokeParticles = [];
-  function spawnSmoke(x, y) {
-    smokeParticles.push({ x, y, life: 1.0, vx: (Math.random()-0.5)*0.4, vy: -0.6 - Math.random()*0.4, r: 2 + Math.random()*2 });
-  }
-  function updateSmoke() {
-    for (let i = smokeParticles.length-1; i >= 0; i--) {
-      const p = smokeParticles[i];
-      p.x += p.vx; p.y += p.vy; p.life -= 0.025; p.r += 0.08;
-      if (p.life <= 0) smokeParticles.splice(i, 1);
-    }
-  }
-  function drawSmoke(baseX, baseY) {
-    smokeParticles.forEach(p => {
-      ctx.save();
-      ctx.globalAlpha = p.life * 0.55;
-      ctx.fillStyle = '#bbb';
-      ctx.beginPath();
-      ctx.arc(baseX + p.x, baseY + p.y, p.r, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-    });
-  }
+  // WAVE frames (both arms up alternating)
+  const waveFrames = [
+    [
+      [_,_,HR,HR,HR,_,_,_],
+      [_,HR,SK,SK,SK,HR,_,_],
+      [_,HR,SK,SK,SK,HR,_,_],
+      [_,_,HR,HR,HR,_,_,_],
+      [CL,_,CL,CL,CL,_,CL,_],  // arms up
+      [_,CL,CL,CL,CL,CL,_,_],
+      [_,CL,CL,CL,CL,CL,_,_],
+      [_,PT,PT,_,PT,PT,_,_],
+      [_,PT,PT,_,PT,PT,_,_],
+      [_,PT,PT,_,PT,PT,_,_],
+      [_,SH,SH,_,SH,SH,_,_],
+      [_,_,_,_,_,_,_,_],
+    ],
+    [
+      [_,_,HR,HR,HR,_,_,_],
+      [_,HR,SK,SK,SK,HR,_,_],
+      [_,HR,SK,SK,SK,HR,_,_],
+      [_,_,HR,HR,HR,_,_,_],
+      [_,CL,CL,CL,CL,CL,_,_],
+      [CL,_,CL,CL,CL,_,CL,_],  // arms up alternate
+      [_,CL,CL,CL,CL,CL,_,_],
+      [_,PT,PT,_,PT,PT,_,_],
+      [_,PT,PT,_,PT,PT,_,_],
+      [_,PT,PT,_,PT,PT,_,_],
+      [_,SH,SH,_,SH,SH,_,_],
+      [_,_,_,_,_,_,_,_],
+    ],
+  ];
 
-  // ── State ──
-  let posX = window.innerWidth - 60; // start near right
-  let velX = -1.2;   // walk left initially
-  let frame = 0;
-  let frameTick = 0;
-  let mode = 'walk';  // 'walk' | 'think' | 'write' | 'smoke'
-  let jumpY = 0;      // vertical offset for jump
-  let jumping = false;
-  let jumpV = 0;
-  let thinkPhase = 0; // cycle through think/write phases
-  let thinkTick = 0;
-  let lastActivity = Date.now();
-  const IDLE_TIMEOUT = 30000; // 30 sec
-  let fleeing = false;
-  ['mousemove','keydown','mousedown','touchstart'].forEach(ev =>
-    document.addEventListener(ev, () => { lastActivity = Date.now(); }, {passive:true})
-  );
-
-  C.addEventListener('click', () => {
-    if (fleeing) return;
-    fleeing = true;
-    mode = 'walk';
-    smokeParticles.length = 0;
-    // Run toward nearest edge at high speed
-    velX = posX < window.innerWidth / 2 ? -6 : 6;
-  });
-
-  const BOTTOM_Y = 70; // px from bottom (above send button row)
-
-  function getBottomY() {
-    // position canvas above the chat input area
-    return window.innerHeight - BOTTOM_Y - H;
-  }
-
-  function updateCanvasPos() {
-    C.style.left = posX + 'px';
-    C.style.bottom = (BOTTOM_Y + jumpY) + 'px';
-    C.style.right = 'auto';
-  }
-
-  // SMOKE frame (standing, cigarette in hand)
-  const CI = '#f5e0a0'; // cigarette
+  // SMOKE frames (cigarette in hand)
+  const CI = '#f5e0a0';
   const smokeFrames = [
     [
       [_,_,HR,HR,HR,_,_,_],
@@ -2196,108 +2164,172 @@ async function adminClearLogs(uid) {
     ],
   ];
 
+  // ── Smoke particles ──
+  const smokeParticles = [];
+  function spawnSmoke(ox, oy) {
+    smokeParticles.push({ x: ox, y: oy, life: 1.0, vx: (Math.random()-0.5)*0.4, vy: -0.6-Math.random()*0.4, r: 2+Math.random()*2 });
+  }
+  function updateSmoke() {
+    for (let i = smokeParticles.length-1; i >= 0; i--) {
+      const p = smokeParticles[i];
+      p.x += p.vx; p.y += p.vy; p.life -= 0.025; p.r += 0.08;
+      if (p.life <= 0) smokeParticles.splice(i, 1);
+    }
+  }
+  function drawSmoke(bx, by) {
+    smokeParticles.forEach(p => {
+      ctx.save(); ctx.globalAlpha = p.life * 0.55; ctx.fillStyle = '#bbb';
+      ctx.beginPath(); ctx.arc(bx+p.x, by+p.y, p.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+    });
+  }
+
+  // ── State ──
+  let posX = 0, posY = 0;
+  let velX = 1.2;
+  let frame = 0, frameTick = 0, tick = 0;
+  let mode = 'wave';
+  let jumpOff = 0, jumping = false, jumpV = 0; // jumpOff: pixels above floor
+  let thinkTick = 0;
+  let lastActivity = Date.now();
+  let fleeing = false;
+  let startTime = Date.now();
+  let nextJumpAt = 300 + Math.floor(Math.random()*300);
+
+  ['mousemove','keydown','mousedown','touchstart'].forEach(ev =>
+    document.addEventListener(ev, () => { lastActivity = Date.now(); }, {passive:true})
+  );
+
+  C.addEventListener('click', () => {
+    if (fleeing) return;
+    fleeing = true;
+    mode = 'walk';
+    smokeParticles.length = 0;
+    velX = posX < window.innerWidth / 2 ? -7 : 7;
+  });
+
+  function isLoginScreen() {
+    const ls = document.getElementById('login-screen');
+    return ls && ls.style.display !== 'none';
+  }
+
   function render() {
     ctx.clearRect(0, 0, W, H);
-    let frames, fi;
-    if (mode === 'smoke') {
-      frames = smokeFrames; fi = frame % 2;
-      drawSmoke(W, H - frames[fi].length * PX + 4);
-    } else if (mode === 'think') {
-      frames = thinkFrames; fi = frame % 2;
-      ctx.fillStyle = 'rgba(255,255,255,0.7)';
-      ctx.beginPath(); ctx.arc(W-6, 4, 3, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(W-2, 1, 2, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#aaa';
-      ctx.font = '6px sans-serif'; ctx.fillText('?', W-8, 7);
-    } else if (mode === 'write') {
-      frames = writeFrames; fi = frame % 2;
-    } else {
-      frames = walkFrames; fi = frame % 2;
+    let frames, fi = frame % 2;
+    if (mode === 'wave')       { frames = waveFrames; }
+    else if (mode === 'think') {
+      frames = thinkFrames;
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      ctx.beginPath(); ctx.arc(W-6,4,3,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(W-2,1,2,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#999'; ctx.font='6px sans-serif'; ctx.fillText('?',W-9,7);
     }
+    else if (mode === 'write') { frames = writeFrames; }
+    else if (mode === 'smoke') { frames = smokeFrames; drawSmoke(W, H - smokeFrames[0].length*PX + 4); }
+    else                       { frames = walkFrames; }
     draw(frames[fi], 0, H - frames[fi].length * PX);
   }
 
-  // Random jump trigger — fires roughly every 4–8 seconds
-  let nextJumpAt = 200 + Math.floor(Math.random() * 200);
-  function checkJumpTrigger() {
-    if (jumping) return;
-    if (tick >= nextJumpAt) {
-      startJump();
-      nextJumpAt = tick + 240 + Math.floor(Math.random() * 240);
-    }
+  function setPos(x, y) {
+    posX = x; posY = y;
+    C.style.left = Math.round(x) + 'px';
+    C.style.top  = Math.round(y) + 'px';
   }
 
-  function startJump() {
-    if (jumping) return;
-    jumping = true;
-    jumpV = 6;
-  }
-
-  let tick = 0;
   function loop() {
     tick++;
 
-    // Flee mode — run off screen and vanish
+    // ── Flee ──
     if (fleeing) {
       posX += velX;
-      frameTick++;
-      if (frameTick >= 6) { frameTick = 0; frame++; }
-      updateCanvasPos();
+      frameTick++; if (frameTick >= 6) { frameTick = 0; frame++; }
+      setPos(posX, posY);
       render();
-      if (posX < -W - 10 || posX > window.innerWidth + 10) {
-        C.style.display = 'none';
-        return; // stop the loop
-      }
-      requestAnimationFrame(loop);
-      return;
+      if (posX < -W-20 || posX > window.innerWidth+20) { C.style.display='none'; return; }
+      requestAnimationFrame(loop); return;
     }
 
-    // Mode sync with global isLoading + idle detection
     const loading = typeof isLoading !== 'undefined' && isLoading;
-    const idle = !loading && (Date.now() - lastActivity > IDLE_TIMEOUT);
+    const idle    = !loading && (Date.now() - lastActivity > 30000);
+    const onLogin = isLoginScreen();
 
-    if (loading) {
-      thinkTick++;
-      if (thinkTick % 120 < 60) mode = 'think';
-      else mode = 'write';
-    } else if (idle) {
-      mode = 'smoke';
-      updateSmoke();
-      if (tick % 18 === 0) spawnSmoke(0, 0); // emit puff
-    } else {
-      mode = 'walk';
-      thinkTick = 0;
-      smokeParticles.length = 0;
+    if (onLogin) {
+      // ── LOGIN SCREEN mode ──
+      const card = document.querySelector('.login-card');
+      if (!card) { requestAnimationFrame(loop); return; }
+      const rect = card.getBoundingClientRect();
+      const floorY = rect.bottom - H;      // character sits on card bottom edge
+      const leftX  = rect.left;
+      const rightX = rect.right - W;
 
-      // Jump physics
-      if (jumping) {
-        jumpY += jumpV;
-        jumpV -= 0.7;
-        if (jumpY <= 0) { jumpY = 0; jumping = false; jumpV = 0; }
+      if (Date.now() - startTime < 5000) {
+        // Wave for first 5 seconds — stand center
+        mode = 'wave';
+        setPos(rect.left + (rect.width - W) / 2, floorY);
+      } else {
+        mode = 'walk';
+        posX += velX;
+        if (posX <= leftX)  { posX = leftX;  velX =  Math.abs(velX); }
+        if (posX >= rightX) { posX = rightX; velX = -Math.abs(velX); }
+        setPos(posX, floorY);
       }
+    } else {
+      // ── CHAT mode ──
+      const FLOOR_BOTTOM = 70; // px above bottom of viewport
+      const floorY = window.innerHeight - FLOOR_BOTTOM - H;
 
-      // Walk
-      posX += velX;
+      if (loading) {
+        thinkTick++;
+        mode = thinkTick % 120 < 60 ? 'think' : 'write';
+        setPos(posX, floorY);
+      } else if (idle) {
+        mode = 'smoke';
+        updateSmoke();
+        if (tick % 18 === 0) spawnSmoke(0, 0);
+        setPos(posX, floorY);
+      } else {
+        mode = 'walk';
+        thinkTick = 0;
+        smokeParticles.length = 0;
 
-      // Bounce off edges
-      const margin = 10;
-      if (posX < margin) { posX = margin; velX = Math.abs(velX); }
-      if (posX > window.innerWidth - W - margin) { posX = window.innerWidth - W - margin; velX = -Math.abs(velX); }
+        // Jump
+        if (jumping) {
+          jumpOff += jumpV;
+          jumpV -= 0.7;
+          if (jumpOff <= 0) { jumpOff = 0; jumping = false; jumpV = 0; }
+        }
+        if (tick >= nextJumpAt && !jumping) {
+          jumping = true; jumpV = 6;
+          nextJumpAt = tick + 240 + Math.floor(Math.random()*240);
+        }
 
-      checkJumpTrigger();
+        posX += velX;
+        const mg = 10;
+        if (posX < mg) { posX = mg; velX = Math.abs(velX); }
+        if (posX > window.innerWidth - W - mg) { posX = window.innerWidth - W - mg; velX = -Math.abs(velX); }
+
+        setPos(posX, floorY - jumpOff);
+      }
     }
 
-    // Animate frame
     frameTick++;
-    const speed = loading ? 25 : 12;
-    if (frameTick >= speed) { frameTick = 0; frame++; }
+    const spd = (mode==='think'||mode==='write'||mode==='smoke') ? 25 : mode==='wave' ? 15 : 12;
+    if (frameTick >= spd) { frameTick = 0; frame++; }
 
-    updateCanvasPos();
     render();
     requestAnimationFrame(loop);
   }
 
-  updateCanvasPos();
+  // Init position
+  const initCard = document.querySelector('.login-card');
+  if (initCard) {
+    const r = initCard.getBoundingClientRect();
+    posX = r.left + (r.width - W) / 2;
+    posY = r.bottom - H;
+  } else {
+    posX = window.innerWidth - 60;
+    posY = window.innerHeight - 70 - H;
+  }
+  setPos(posX, posY);
   loop();
 
   window.addEventListener('resize', updateCanvasPos);
